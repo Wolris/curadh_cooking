@@ -8,20 +8,27 @@ The project is intentionally starting with a real recipe before locking the appl
 
 ## CURRENT EXECUTION LOCK
 
-**AWAITING KITCHEN VALIDATION — Recipe 0001 Draft V1: arrowroot/flax sandwich bread.**
+**AWAITING KITCHEN VALIDATION — Recipe 0001 Reconstruction V3: arrowroot/flax yeast sandwich bread.**
 
-Owner requirements captured:
+Recovered recipe history:
+
+- household GF V1 was denser, did not use cassava, and used more eggs;
+- household GF V2 was less dense and used yeast;
+- the Breadman managed the rise as part of its program;
+- therefore the project recipe currently being reconstructed is V3.
+
+Owner target:
 
 - sandwich + toast loaf;
 - soft/fluffy relative to prior gluten-free loaves;
 - between moist and dry, leaning dry;
 - flexible rather than crumbly;
-- substantially less dense than prior versions;
+- lighter than V2 if possible;
 - mostly neutral/savory;
 - soft crust;
-- quick-bread method in a Breadman/bread machine.
+- Breadman process.
 
-Available candidate ingredients captured:
+Available candidate ingredients:
 
 - arrowroot;
 - flaxseed/meal;
@@ -43,33 +50,36 @@ Available candidate ingredients captured:
 - coconut oil;
 - coconut milk.
 
-Draft V1 lives at:
+Current draft:
 
-- `recipes/drafts/0001-arrowroot-flax-sandwich-bread-v1.md`
+- `recipes/drafts/0001-arrowroot-flax-sandwich-bread-v3.md`
+
+The earlier generated quick-bread draft was superseded before baking because it incorrectly treated yeast as a new variable rather than recovered V2 evidence.
 
 ### Current validation request
 
-Bake Draft V1 without introducing additional substitutions unless an ingredient is unavailable.
+Bake Reconstruction V3 using the same successful V2 Breadman yeast cycle if remembered; otherwise prefer the machine's Gluten-Free cycle if available.
 
 After the loaf is completely cool, report:
 
-1. lift/density;
+1. lift/density versus remembered V1/V2;
 2. crumb/flexibility;
 3. moisture/gumminess;
 4. sandwich + toast performance;
 5. flavor + crust;
-6. whether hydration needed adjustment during mixing;
-7. approximate loaf height / any collapse;
-8. next-morning slicing behavior if available.
+6. exact Breadman cycle and visible rise/collapse behavior;
+7. any hydration adjustment;
+8. approximate loaf height/shape;
+9. next-morning slicing behavior if available.
 
 ### Acceptance for this lock
 
 - owner requirements captured — DONE;
-- ingredients captured — DONE;
-- bounded first formula drafted — DONE;
-- pan/tool method, timing and doneness cues documented — DONE;
+- ingredient inventory captured — DONE;
+- prior-version evidence corrected — DONE;
+- bounded V3 formula drafted — DONE;
+- Breadman process and doneness cues documented — DONE;
 - ingredient roles documented — DONE;
-- required versus deferred ingredients documented — DONE;
 - reportable bake-test matrix documented — DONE;
 - kitchen validation — PENDING;
 - revise from Jim's evidence — PENDING;
