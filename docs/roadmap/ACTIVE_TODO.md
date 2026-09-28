@@ -8,34 +8,72 @@ The project is intentionally starting with a real recipe before locking the appl
 
 ## CURRENT EXECUTION LOCK
 
-**REQUIREMENTS GATE — Recipe 0001: reconstruct the wheat-free arrowroot/flax bread.**
+**AWAITING KITCHEN VALIDATION — Recipe 0001 Draft V1: arrowroot/flax sandwich bread.**
 
-Known remembered concept:
+Owner requirements captured:
+
+- sandwich + toast loaf;
+- soft/fluffy relative to prior gluten-free loaves;
+- between moist and dry, leaning dry;
+- flexible rather than crumbly;
+- substantially less dense than prior versions;
+- mostly neutral/savory;
+- soft crust;
+- quick-bread method in a Breadman/bread machine.
+
+Available candidate ingredients captured:
 
 - arrowroot;
-- flaxseed;
+- flaxseed/meal;
+- cassava flour;
+- tigernut flour;
+- almond flour;
+- oatmeal/oat flour;
+- cornstarch;
 - eggs;
-- honey;
-- one or more other wheat-free flours.
+- honey/maple;
+- baking powder;
+- baking soda;
+- active yeast;
+- salt;
+- olive oil;
+- butter;
+- apple cider vinegar;
+- milk;
+- coconut oil;
+- coconut milk.
 
-### Required owner input
+Draft V1 lives at:
 
-Before drafting the formula, Jim must provide:
+- `recipes/drafts/0001-arrowroot-flax-sandwich-bread-v1.md`
 
-1. the target bread characteristics;
-2. the ingredients currently available / preferred for this bake.
+### Current validation request
+
+Bake Draft V1 without introducing additional substitutions unless an ingredient is unavailable.
+
+After the loaf is completely cool, report:
+
+1. lift/density;
+2. crumb/flexibility;
+3. moisture/gumminess;
+4. sandwich + toast performance;
+5. flavor + crust;
+6. whether hydration needed adjustment during mixing;
+7. approximate loaf height / any collapse;
+8. next-morning slicing behavior if available.
 
 ### Acceptance for this lock
 
-- capture desired loaf/use characteristics;
-- capture available ingredients and any ingredients Jim wants excluded;
-- draft one bounded first formula with weights and useful volume equivalents;
-- specify pan/tool requirements, method, bake temperature, timing, and doneness cues;
-- explain the role of each important ingredient;
-- separate required ingredients from optional/substitution candidates;
-- provide a small, reportable bake-test matrix;
-- revise from Jim's kitchen evidence;
-- only after Jim approves the result, create the canonical `recipes/0001-...` record.
+- owner requirements captured — DONE;
+- ingredients captured — DONE;
+- bounded first formula drafted — DONE;
+- pan/tool method, timing and doneness cues documented — DONE;
+- ingredient roles documented — DONE;
+- required versus deferred ingredients documented — DONE;
+- reportable bake-test matrix documented — DONE;
+- kitchen validation — PENDING;
+- revise from Jim's evidence — PENDING;
+- promote an approved recipe to Canonical only after owner approval — PENDING.
 
 ### Scope boundary
 
