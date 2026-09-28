@@ -15,24 +15,26 @@ Sandwich/toast loaf; soft/fluffy; between moist and dry, leaning dry; flexible r
 
 ## V3 formula
 
+All measurements use standard US cups/spoons.
+
 ### Dry
 
-- 110 g finely ground oat flour (about 1 cup)
-- 95 g arrowroot starch/flour (about 3/4 cup)
-- 75 g cassava flour (about 1/2 cup)
-- 50 g cornstarch (about 6 Tbsp)
-- 20 g ground flaxseed meal (about 3 Tbsp)
-- 4 g baking powder (1 tsp)
-- 6 g fine salt (1 tsp)
-- about 6 g active dry yeast (2 tsp)
+- 1 cup finely ground oat flour
+- 3/4 cup arrowroot starch/flour
+- 1/2 cup cassava flour
+- 6 Tbsp cornstarch
+- 3 Tbsp ground flaxseed meal
+- 1 tsp baking powder
+- 1 tsp fine salt
+- 2 tsp active dry yeast
 
 ### Wet
 
 - 2 large eggs
-- 210 g milk (about 7/8 cup)
-- 28–30 g honey (about 1 1/3 Tbsp)
-- 25 g olive oil (about 2 Tbsp)
-- 10 g apple cider vinegar (2 tsp)
+- 3/4 cup + 2 Tbsp milk
+- 1 Tbsp + 1 tsp honey
+- 2 Tbsp olive oil
+- 2 tsp apple cider vinegar
 
 ## Why this changed
 
@@ -46,7 +48,7 @@ Almond and tigernut remain deferred for this test.
 
 ## Oat flour
 
-If using rolled oats, grind very finely in the blender and weigh 110 g after grinding.
+If using rolled oats, grind very finely in the blender, then measure 1 cup of the finished oat flour.
 
 ## Breadman cycle
 
@@ -72,7 +74,7 @@ Record the exact cycle used.
 
 The mixed dough should be a thick cohesive batter/dough that mounds softly and is spreadable, not pourable and not a conventional wheat dough ball.
 
-- Too stiff/dry: add milk 15 g / 1 Tbsp at a time.
+- Too stiff/dry: add milk 1 Tbsp at a time.
 - Too loose/pourable: add oat flour 1 Tbsp at a time.
 
 Let the machine finish its rise and bake program.
@@ -83,7 +85,7 @@ Cool completely before slicing, ideally at least 90 minutes.
 
 ## Doneness
 
-The center should be set with no wet/gummy line. If checked with an instant-read thermometer, roughly 200–205°F / 93–96°C is a useful center target.
+The center should be set with no wet/gummy line. If checked with an instant-read thermometer, roughly 200–205°F is a useful center target.
 
 ## Kitchen validation
 
