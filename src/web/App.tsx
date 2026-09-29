@@ -88,6 +88,8 @@ type RunPlanStep = {
   sourceStepId?: string;
   stage: "prep" | "cook";
   stageKey?: string | null;
+  ingredientId?: string;
+  label?: string;
   instruction: string;
 };
 
@@ -122,7 +124,13 @@ type ActiveRun = {
   startedAt: string;
   currentStepId?: string | null;
   currentStepKey?: string | null;
+  completedStepKeys?: string[];
   snapshot?: CookRunSnapshot | null;
+};
+
+type ActiveRunReference = {
+  id: string;
+  recipeSlug: string;
 };
 
 type RunEvent = {
@@ -231,9 +239,32 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    requestJson<RecipeSummary[]>("/api/recipes")
-      .then(setRecipes)
-      .catch((cause) => setError(cause instanceof Error ? cause.message : String(cause)));
+    let cancelled = false;
+
+    async function bootstrap() {
+      try {
+        const [recipeList, active] = await Promise.all([
+          requestJson<RecipeSummary[]>("/api/recipes"),
+          requestJson<ActiveRunReference | null>("/api/cook-runs/active/latest")
+        ]);
+
+        if (cancelled) return;
+        setRecipes(recipeList);
+
+        if (active) {
+          await resumeActiveRun(active);
+        }
+      } catch (cause) {
+        if (!cancelled) {
+          setError(cause instanceof Error ? cause.message : String(cause));
+        }
+      }
+    }
+
+    void bootstrap();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -277,6 +308,41 @@ export function App() {
     return choice?.options?.find((option) => option.value === selected)?.activeMinutes ?? null;
   }, [configuration, selections]);
 
+  async function resumeActiveRun(reference: ActiveRunReference) {
+    const [detail, run] = await Promise.all([
+      requestJson<RecipeDetail>(`/api/recipes/${reference.recipeSlug}`),
+      requestJson<ActiveRun & { events: RunEvent[] }>(`/api/cook-runs/${reference.id}`)
+    ]);
+
+    const restoredSteps: RunPlanStep[] =
+      run.snapshot?.steps ??
+      detail.variant.steps.map((step) => ({
+        key: step.id,
+        sourceStepId: step.id,
+        stage: "cook" as const,
+        stageKey: step.stageKey,
+        instruction: step.instruction
+      }));
+
+    const currentKey = run.currentStepKey ?? run.currentStepId ?? restoredSteps[0]?.key;
+    const restoredIndex = Math.max(
+      0,
+      restoredSteps.findIndex((step) => step.key === currentKey)
+    );
+
+    setRecipe(detail);
+    setSelections(run.snapshot?.selections ?? defaultsFor(detail.variant.configuration));
+    setActiveRun(run);
+    setViewingRecipeDuringRun(false);
+    setRunEvents(run.events);
+    setCurrentStepIndex(restoredIndex);
+    setEditingEventId(null);
+    setEditingRunStepKey(null);
+    setEventType("observation");
+    setEventText("");
+    setFinishing(false);
+  }
+
   async function openRecipe(slug: string) {
     setError(null);
     const detail = await requestJson<RecipeDetail>(`/api/recipes/${slug}`);
@@ -315,26 +381,43 @@ export function App() {
     setFinishing(false);
   }
 
-  async function moveStep(nextIndex: number) {
+  async function moveStep(nextIndex: number, completeCurrent = false) {
     if (!activeRun || runSteps.length === 0) return;
     const bounded = Math.max(0, Math.min(runSteps.length - 1, nextIndex));
     const step = runSteps[bounded];
+    const completedStepKeys =
+      completeCurrent && currentRunStep
+        ? Array.from(
+            new Set([...(activeRun.completedStepKeys ?? []), currentRunStep.key])
+          )
+        : activeRun.completedStepKeys ?? [];
+
+    const progress = activeRun.snapshot
+      ? {
+          currentStepKey: step.key,
+          ...(completeCurrent ? { completedStepKeys } : {})
+        }
+      : {
+          currentStepId: step.sourceStepId ?? step.key,
+          ...(completeCurrent ? { completedStepKeys } : {})
+        };
 
     await requestJson<{ ok: true }>(`/api/cook-runs/${activeRun.id}`, {
       method: "PATCH",
-      body: JSON.stringify(
-        activeRun.snapshot
-          ? { currentStepKey: step.key }
-          : { currentStepId: step.sourceStepId ?? step.key }
-      )
+      body: JSON.stringify(progress)
     });
 
     setCurrentStepIndex(bounded);
     setActiveRun({
       ...activeRun,
+      completedStepKeys,
       currentStepKey: activeRun.snapshot ? step.key : activeRun.currentStepKey,
       currentStepId: !activeRun.snapshot ? step.sourceStepId ?? step.key : activeRun.currentStepId
     });
+  }
+
+  async function advanceStep() {
+    await moveStep(currentStepIndex + 1, true);
   }
 
   async function refreshRun() {
