@@ -656,6 +656,7 @@ export function App() {
                         <label className="inline-toggle">
                           <input
                             type="checkbox"
+                            aria-label={`${rawIngredient.name} include`}
                             checked={selections[includeChoice.key] !== false}
                             onChange={(event) => setChoice(includeChoice.key, event.target.checked)}
                           />
