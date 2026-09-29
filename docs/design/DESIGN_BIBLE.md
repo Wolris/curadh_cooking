@@ -654,3 +654,57 @@ The interaction should assume:
 - reliable re-entry into an active run.
 
 Icons may improve scanning later, but text labels remain the primary semantic layer until the interaction hierarchy is proven.
+
+
+## 14. Persistent Cook Mode context, useful estimates, and run recovery
+
+Owner review of the first configurable Cook Mode prototype established the following canonical interaction decisions.
+
+### Recipe context is visible during Cook Mode
+
+A separate **View Recipe** route remains useful, but it is not sufficient as the primary orientation mechanism.
+
+On desktop or other sufficiently wide layouts, Cook Mode should pair the active instruction with a persistent recipe-context rail/panel.
+
+During **Prep**, that context is ingredient-oriented:
+
+- show the preparation sequence;
+- highlight the current ingredient/prep item;
+- visibly check completed prep items;
+- Next step completes the current prep item and advances.
+
+During **Cook**, that context is step-oriented:
+
+- show a concise excerpt for each cooking step;
+- highlight and expand the active step;
+- keep other steps compact and interactive;
+- selecting a step jumps the run to that point.
+
+Mobile preserves the same information architecture in a compact/collapsible form rather than requiring a permanent side rail.
+
+### Run progress is persistent state
+
+Current position and completion are Cook Run data, not temporary component decoration.
+
+An active run must be recoverable after refresh/re-entry with:
+
+- frozen run snapshot;
+- current stage/step;
+- completed prep/step progress;
+- recorded deviations/observations.
+
+### Useful estimates are allowed
+
+Verified or recipe-authored conversions are preferred, but Curadh Cooking may provide a clearly labeled **unverified estimate** when a user explicitly asks for a practical conversion or substitution and no verified value exists.
+
+The estimate must communicate uncertainty and must not silently become canonical recipe data.
+
+### Tolerance-awareness language
+
+Default ingredient advisories should communicate **be aware of tolerance** rather than functioning as medical warnings.
+
+They may explain why a form or ingredient deserves attention, but they must not imply universal safety, diagnosis, or treatment.
+
+### Persistence errors are visible
+
+A Cook Run interaction that fails to save must show the user that it failed. Silent persistence failure is unacceptable.
