@@ -46,6 +46,41 @@ test("Recipe 0001 can create a Cook Run, record reality, and save independent re
   await expect(page.getByRole("heading", { name: "Recent Cook Runs" })).toBeVisible();
   await expect(page.getByText("Height / rise: mixed").first()).toBeVisible();
   await expect(page.getByText("Flavor: hit").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Edit run" }).first().click();
+  await expect(page.getByRole("heading", { name: "Edit run evidence" })).toBeVisible();
+  await expect(page.getByText(/run stays completed/i)).toBeVisible();
+  await expect(
+    page.getByLabel("Completed Cook Run notes").getByText(
+      "Batter is thicker than the last time, but still cohesive."
+    )
+  ).toBeVisible();
+
+  await page.getByLabel("Completed Cook Run notes").getByRole("button", { name: "Edit" }).click();
+  await page.getByRole("button", { name: "Amount", exact: true }).click();
+  await page.getByLabel("Completed run change details").fill(
+    "Used a little less liquid than planned."
+  );
+  await page.getByRole("button", { name: "Save note changes" }).click();
+
+  await expect(
+    page.getByLabel("Completed Cook Run notes").getByText(
+      "Used a little less liquid than planned."
+    )
+  ).toBeVisible();
+  await expect(
+    page.getByLabel("Completed Cook Run notes").getByText("Amount", { exact: true })
+  ).toBeVisible();
+
+  await page.getByLabel("Completed Height / rise outcome").selectOption("hit");
+  await page.getByLabel("Completed Height / rise note").fill(
+    "Corrected after reviewing the finished loaf."
+  );
+  await page.getByRole("button", { name: "Save result corrections" }).click();
+
+  await page.getByRole("button", { name: "Back to recipe" }).click();
+  await expect(page.getByRole("heading", { name: "Recent Cook Runs" })).toBeVisible();
+  await expect(page.getByText("Height / rise: hit").first()).toBeVisible();
 });
 
 
