@@ -67,13 +67,20 @@ Cook Mode is a core product direction. MVP should first support structured recip
 
 ## Current execution lock
 
-Implement the Recipe 0002 site-review findings as the next MVP foundation:
+Reconcile first owner review of the configurable Cook Mode into a persistent, recipe-oriented execution experience.
 
-**configurable Recipe -> frozen Cook Run snapshot -> prep-first Cook Mode -> structured live deviations.**
+Immediate requirements:
 
-The first proving case is Homemade Chicken Soup. Recipe 0002 remains Draft; kitchen validation resumes only after the configure/prep/run experience is ready for owner browser review.
+- repair Add/other structured event persistence and surface save failures;
+- keep Recipe context visible during Cook Mode;
+- Prep uses a persistent ingredient/prep checklist with current/completed state;
+- Cook uses an interactive step excerpt outline with direct jump;
+- recover active runs after refresh/re-entry;
+- allow clearly labeled unverified conversion estimates when explicitly requested;
+- use tolerance-awareness notices rather than medical-warning language;
+- validate desktop and mobile/kitchen-scale behavior before Recipe 0002 kitchen testing resumes.
 
-Canonical design detail is in Design Bible §12 and the ordered slices are in `docs/roadmap/ACTIVE_TODO.md`.
+Canonical design detail is in Design Bible §§12–14 and `docs/design/COOK_RUN_UX_DEFINITION.md`.
 
 ## Repository visibility
 
