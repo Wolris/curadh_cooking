@@ -36,15 +36,15 @@ Latest CI branch validation before the local-validator update: **PASS**
 - production build — PASS
 - Playwright browser vertical flow — PASS
 
-Latest owner-local full validation: **BLOCKED BY LOCAL DEV STARTUP RACE**
+Latest owner-local full validation: **BLOCKED BY PLAYWRIGHT DEV-SERVER STARTUP**
 
 - pull/install/typecheck/test/build — PASS
 - Playwright Chromium install — PASS
-- Playwright launched, but Recipe 0001 never appeared because the React/Vite shell became available before the API was ready
-- Playwright now starts/waits for Fastify `/api/health` and Vite separately
-- Vite now uses `strictPort: true` on 5174 so it cannot silently move to another port
-- corrected startup model: CI PASS, including Playwright vertical flow
-- owner-local rerun required
+- Playwright timed out waiting for its configured local web servers before the E2E test started
+- normal manual development remains on web 5174 + API 3001
+- automated E2E is now isolated on dedicated web 5274 + API 3102
+- E2E ports are non-reusable so a true collision fails explicitly instead of silently attaching to another project
+- owner-local rerun required after CI validation
 
 The browser automation proves:
 
