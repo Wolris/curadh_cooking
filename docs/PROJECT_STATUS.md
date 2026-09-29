@@ -55,6 +55,23 @@ Proven run settings:
 Canonical recipe: `recipes/0001-oatmeal-sandwich-bread.md`  
 Run evidence: `recipes/results/0001-v3-2026-09-28.md`
 
+
+## Recipe 0003
+
+**Whole-Milk Yogurt — Euro Cuisine** is a **Draft** recipe for the 7-jar maker.
+
+V1 uses:
+
+- 4 cups whole milk;
+- one 3 g Yogourmet Original sachet;
+- 3.5 g unflavored gelatin for a firmer refrigerated set;
+- milk heated to 180°F / 82°C or first boil;
+- cooling to 108–112°F / 42–44°C, with Yogourmet's warm-not-hot finger cue as the no-thermometer fallback;
+- 5–8 hours incubation with individual jar lids off;
+- immediate capping/refrigeration followed by about 8 hours of cold set.
+
+The first kitchen result is pending full refrigerated evaluation. Do not promote beyond Draft until set, creaminess, tang, smoothness, whey separation, and overall usefulness are reported.
+
 ## Core experience
 
 The first navigation/experience model follows the real Recipe 0001 journey:
