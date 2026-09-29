@@ -101,6 +101,39 @@ Branch:
     - reconcile evidence;
     - status promotion remains explicit.
 
+### Implementation progress after owner review
+
+Implemented and automated:
+
+- structured Add / Skip / Amount / Substitute / Setting-prep / Observation event types persist through SQLite migrations;
+- run-note save failures surface visibly;
+- every new run note is bound to a validated generated run-step key, including Prep steps;
+- run notes can be edited, reclassified, and deleted without altering the frozen Recipe/Run plan;
+- Previous / Next navigation is repeated below run notes, before Finish Cook Run;
+- Cook Mode now includes a persistent recipe-context rail on wide layouts and a stacked equivalent on narrower layouts;
+- Prep context shows preparation-order items, highlights the current item, and checks completed items;
+- Next step persists completion before advancing;
+- Cook context shows compact step excerpts, expands the active step, and supports direct step jumping;
+- active local Cook Runs recover after refresh/re-entry with snapshot, current position, completed progress, and saved notes;
+- prepared-parsley alternate units are explicitly labeled as an unverified estimate;
+- ingredient advisories use tolerance-awareness language rather than universal medical-warning language.
+
+Automated coverage proves:
+
+- invalid run-note step associations are rejected;
+- note type correction and deletion work;
+- Prep completion survives refresh;
+- saved run notes survive refresh;
+- active run recovery restores the correct step;
+- direct Cook-step jump synchronizes the run position;
+- Recipe 0001 remains green.
+
+Next gate under this same lock:
+
+- owner browser review of desktop and mobile/kitchen-scale behavior;
+- reconcile owner findings;
+- only then resume Recipe 0002 kitchen validation.
+
 ### Supporting UX owner
 
 `docs/design/COOK_RUN_UX_DEFINITION.md` owns the detailed task flow, state matrix, low-fidelity states, review findings, and risks for this lock.
