@@ -117,7 +117,7 @@ function getRecipeDetail(db: CuradhDb, slug: string) {
   `).all(recipe.id) as Array<Record<string, unknown>>;
 
   const resultQuery = db.prepare(`
-    SELECT rm.label, crr.outcome, crr.note
+    SELECT crr.result_marker_id AS resultMarkerId, rm.label, crr.outcome, crr.note
     FROM cook_run_results crr
     JOIN result_markers rm ON rm.id = crr.result_marker_id
     WHERE crr.cook_run_id = ?
@@ -463,7 +463,16 @@ export function buildServer(options: BuildServerOptions = {}) {
       return { ...rest, runStepKey, structuredData };
     });
 
-    return { ...run, snapshot, completedStepKeys, events };
+    const results = db.prepare(`
+      SELECT crr.result_marker_id AS resultMarkerId, rm.label,
+             crr.outcome, crr.note
+      FROM cook_run_results crr
+      JOIN result_markers rm ON rm.id = crr.result_marker_id
+      WHERE crr.cook_run_id = ?
+      ORDER BY rm.position
+    `).all(request.params.id);
+
+    return { ...run, snapshot, completedStepKeys, events, results };
   });
 
   function runContainsStep(
@@ -530,15 +539,15 @@ export function buildServer(options: BuildServerOptions = {}) {
     const parsed = createCookRunEventSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
 
-    const activeRun = db.prepare(`
+    const editableRun = db.prepare(`
       SELECT variant_id AS variantId,
              configuration_snapshot_json AS snapshotJson
       FROM cook_runs
-      WHERE id = ? AND status = 'active'
+      WHERE id = ? AND status IN ('active', 'completed')
     `).get(request.params.id) as { variantId: string; snapshotJson?: string | null } | undefined;
 
-    if (!activeRun) return reply.code(404).send({ error: "Active Cook Run not found" });
-    if (!runContainsStep(activeRun, parsed.data.runStepKey)) {
+    if (!editableRun) return reply.code(404).send({ error: "Editable Cook Run not found" });
+    if (!runContainsStep(editableRun, parsed.data.runStepKey)) {
       return reply.code(400).send({ error: "Run note step does not belong to this Cook Run" });
     }
 
@@ -633,6 +642,49 @@ export function buildServer(options: BuildServerOptions = {}) {
       return { ok: true };
     }
   );
+
+  app.put<{ Params: { id: string } }>("/api/cook-runs/:id/results", async (request, reply) => {
+    const parsed = completeCookRunSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
+
+    const run = db.prepare(
+      "SELECT recipe_id AS recipeId FROM cook_runs WHERE id = ? AND status = 'completed'"
+    ).get(request.params.id) as { recipeId: string } | undefined;
+
+    if (!run) return reply.code(404).send({ error: "Completed Cook Run not found" });
+
+    const markerBelongs = db.prepare(
+      "SELECT 1 FROM result_markers WHERE id = ? AND recipe_id = ?"
+    );
+    const insertResult = db.prepare(`
+      INSERT INTO cook_run_results (cook_run_id, result_marker_id, outcome, note)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(cook_run_id, result_marker_id)
+      DO UPDATE SET outcome = excluded.outcome, note = excluded.note
+    `);
+
+    try {
+      db.transaction(() => {
+        for (const result of parsed.data.results) {
+          if (!markerBelongs.get(result.resultMarkerId, run.recipeId)) {
+            throw new Error("Result marker does not belong to this recipe");
+          }
+          insertResult.run(
+            request.params.id,
+            result.resultMarkerId,
+            result.outcome,
+            result.note || null
+          );
+        }
+      })();
+    } catch (error) {
+      return reply.code(400).send({
+        error: error instanceof Error ? error.message : "Could not correct Cook Run results"
+      });
+    }
+
+    return { ok: true };
+  });
 
   app.post<{ Params: { id: string } }>("/api/cook-runs/:id/complete", async (request, reply) => {
     const parsed = completeCookRunSchema.safeParse(request.body);
