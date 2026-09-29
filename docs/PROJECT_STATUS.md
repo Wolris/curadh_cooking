@@ -67,18 +67,29 @@ Cook Mode is a core product direction. MVP should first support structured recip
 
 ## Current execution lock
 
-Reconcile first owner review of the configurable Cook Mode into a persistent, recipe-oriented execution experience.
+Owner-review implementation for the configurable Cook Mode is now at the **manual browser review gate**.
 
-Immediate requirements:
+Implemented and automated:
 
-- repair Add/other structured event persistence and surface save failures;
-- keep Recipe context visible during Cook Mode;
-- Prep uses a persistent ingredient/prep checklist with current/completed state;
-- Cook uses an interactive step excerpt outline with direct jump;
-- recover active runs after refresh/re-entry;
-- allow clearly labeled unverified conversion estimates when explicitly requested;
-- use tolerance-awareness notices rather than medical-warning language;
-- validate desktop and mobile/kitchen-scale behavior before Recipe 0002 kitchen testing resumes.
+- structured run notes persist and failed saves surface visibly;
+- every run note is bound to its generated run step, including Prep;
+- run notes can be edited, reclassified, and deleted;
+- Previous / Next is repeated below run notes before Finish Cook Run;
+- Cook Mode has a persistent recipe-context rail on wide layouts and stacked treatment on narrow layouts;
+- Prep context highlights the current ingredient/prep item and checks completed items;
+- Next step persists completion before advancing;
+- Cook context shows interactive step excerpts with current-step expansion and direct jumping;
+- active local Cook Runs recover after refresh/re-entry with snapshot, step, completion, and notes;
+- unverified unit alternatives can be labeled explicitly as estimates;
+- ingredient advisories use tolerance-awareness language.
+
+Full TypeScript/API/build/browser validation passes on the combined implementation.
+
+Next gate:
+
+- Jim desktop + mobile/kitchen-scale browser review;
+- reconcile review findings;
+- then resume Recipe 0002 kitchen validation.
 
 Canonical design detail is in Design Bible §§12–14 and `docs/design/COOK_RUN_UX_DEFINITION.md`.
 
