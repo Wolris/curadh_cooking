@@ -475,3 +475,36 @@ button:disabled {
     flex-direction: column;
   }
 }
+
+
+.run-change-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 1rem 0;
+}
+
+.change-action {
+  min-height: 44px;
+  padding: 0.65rem 0.85rem;
+  background: #f7f5ee;
+  color: inherit;
+  border: 1px solid #cfc8b8;
+}
+
+.change-action.active {
+  background: #273128;
+  color: white;
+  border-color: #273128;
+}
+
+@media (max-width: 760px) {
+  .run-change-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .change-action {
+    width: 100%;
+  }
+}
