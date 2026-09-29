@@ -154,6 +154,42 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
     });
     expect(fetched.statusCode).toBe(200);
     expect(fetched.json().snapshot).toEqual(run.snapshot);
+
+    const firstStepKey = run.snapshot.steps[0].key;
+    const secondStepKey = run.snapshot.steps[1].key;
+    const progressed = await app.inject({
+      method: "PATCH",
+      url: `/api/cook-runs/${run.id}`,
+      payload: {
+        currentStepKey: secondStepKey,
+        completedStepKeys: [firstStepKey]
+      }
+    });
+    expect(progressed.statusCode).toBe(200);
+
+    const recovered = await app.inject({
+      method: "GET",
+      url: `/api/cook-runs/${run.id}`
+    });
+    expect(recovered.json()).toEqual(
+      expect.objectContaining({
+        currentStepKey: secondStepKey,
+        completedStepKeys: [firstStepKey]
+      })
+    );
+
+    const latestActive = await app.inject({
+      method: "GET",
+      url: "/api/cook-runs/active/latest"
+    });
+    expect(latestActive.statusCode).toBe(200);
+    expect(latestActive.json()).toEqual(
+      expect.objectContaining({
+        id: run.id,
+        recipeSlug: "homemade-chicken-soup",
+        currentStepKey: secondStepKey
+      })
+    );
   });
 
   it("persists newly structured ingredient-add Cook Run events", async () => {
