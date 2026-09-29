@@ -37,6 +37,8 @@ type RecipeChoiceOption = {
   quantity?: string;
   form?: string | null;
   advisory?: string;
+  estimate?: boolean;
+  estimateNote?: string;
   activeMinutes?: number;
 };
 
@@ -553,7 +555,8 @@ export function App() {
       ...ingredient,
       quantity: option?.quantity ?? ingredient.quantity,
       form: option?.form ?? ingredient.form,
-      advisory: option?.advisory
+      advisory: option?.advisory,
+      estimateNote: option?.estimate ? option.estimateNote : undefined
     };
   }
 
@@ -992,6 +995,7 @@ export function App() {
               const presentation = ingredient as Ingredient & {
                 omitted?: boolean;
                 advisory?: string;
+                estimateNote?: string;
               };
 
               return (
@@ -1034,6 +1038,9 @@ export function App() {
                         </label>
                       )}
                       {includeChoice?.advisory && <p className="advisory">ⓘ {includeChoice.advisory}</p>}
+                      {presentation.estimateNote && (
+                        <p className="estimate-note">≈ Estimate: {presentation.estimateNote}</p>
+                      )}
                       {presentation.advisory && <p className="advisory">ⓘ {presentation.advisory}</p>}
                     </div>
                   )}
