@@ -79,7 +79,8 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
 
   await page.getByLabel("Parsley form").selectOption("prepared");
   await expect(page.getByText("2 tsp", { exact: true })).toBeVisible();
-  await expect(page.getByText(/commercial prepared product/)).toBeVisible();
+  await expect(page.getByText(/Estimate: Unverified recipe estimate/)).toBeVisible();
+  await expect(page.getByText(/Be aware of tolerance: if using a commercial prepared product/)).toBeVisible();
 
   await page.getByLabel("Celery include").uncheck();
 
