@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import type { CookRunEventType, ResultOutcome } from "../shared/contracts";
+import type {
+  CookRunEventType,
+  RecipeSelectionValue,
+  ResultOutcome
+} from "../shared/contracts";
 
 type RecipeSummary = {
   id: string;
@@ -17,6 +21,7 @@ type Ingredient = {
   quantity: string;
   form?: string | null;
   optional: number;
+  position?: number;
 };
 
 type Step = {
@@ -24,6 +29,30 @@ type Step = {
   position: number;
   instruction: string;
   stageKey?: string | null;
+};
+
+type RecipeChoiceOption = {
+  value: string;
+  label: string;
+  quantity?: string;
+  form?: string | null;
+  advisory?: string;
+  activeMinutes?: number;
+};
+
+type RecipeChoice = {
+  key: string;
+  kind: "toggle" | "select";
+  label: string;
+  ingredientId?: string;
+  defaultValue: RecipeSelectionValue;
+  advisory?: string;
+  options?: RecipeChoiceOption[];
+};
+
+type RecipeConfiguration = {
+  version: number;
+  choices: RecipeChoice[];
 };
 
 type EquipmentSetting = {
@@ -54,6 +83,22 @@ type RunHistory = {
   results: RunResult[];
 };
 
+type RunPlanStep = {
+  key: string;
+  sourceStepId?: string;
+  stage: "prep" | "cook";
+  stageKey?: string | null;
+  instruction: string;
+};
+
+type CookRunSnapshot = {
+  version: number;
+  selections: Record<string, RecipeSelectionValue>;
+  configuredIngredients: Ingredient[];
+  estimatedPrepMinutes?: number | null;
+  steps: RunPlanStep[];
+};
+
 type RecipeDetail = RecipeSummary & {
   canonicalVariantId: string;
   variant: {
@@ -65,6 +110,7 @@ type RecipeDetail = RecipeSummary & {
     ingredients: Ingredient[];
     steps: Step[];
     equipmentSettings: EquipmentSetting[];
+    configuration?: RecipeConfiguration | null;
   };
   resultMarkers: ResultMarker[];
   runs: RunHistory[];
@@ -75,6 +121,8 @@ type ActiveRun = {
   status: string;
   startedAt: string;
   currentStepId?: string | null;
+  currentStepKey?: string | null;
+  snapshot?: CookRunSnapshot | null;
 };
 
 type RunEvent = {
@@ -107,10 +155,18 @@ function formatDate(value?: string | null) {
   }).format(new Date(value));
 }
 
+function defaultsFor(configuration?: RecipeConfiguration | null) {
+  return Object.fromEntries(
+    (configuration?.choices ?? []).map((choice) => [choice.key, choice.defaultValue])
+  );
+}
+
 export function App() {
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
+  const [selections, setSelections] = useState<Record<string, RecipeSelectionValue>>({});
   const [activeRun, setActiveRun] = useState<ActiveRun | null>(null);
+  const [viewingRecipeDuringRun, setViewingRecipeDuringRun] = useState(false);
   const [runEvents, setRunEvents] = useState<RunEvent[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [eventType, setEventType] = useState<CookRunEventType>("observation");
@@ -119,8 +175,6 @@ export function App() {
   const [resultValues, setResultValues] = useState<Record<string, ResultOutcome>>({});
   const [resultNotes, setResultNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-
-  const currentStep = recipe?.variant.steps[currentStepIndex] ?? null;
 
   useEffect(() => {
     requestJson<RecipeSummary[]>("/api/recipes")
@@ -140,11 +194,33 @@ export function App() {
     [recipe]
   );
 
+  const configuration = recipe?.variant.configuration ?? null;
+  const runSteps = useMemo<RunPlanStep[]>(() => {
+    if (activeRun?.snapshot?.steps) return activeRun.snapshot.steps;
+    return (recipe?.variant.steps ?? []).map((step) => ({
+      key: step.id,
+      sourceStepId: step.id,
+      stage: "cook",
+      stageKey: step.stageKey,
+      instruction: step.instruction
+    }));
+  }, [activeRun?.snapshot, recipe?.variant.steps]);
+
+  const currentRunStep = runSteps[currentStepIndex] ?? null;
+
+  const carrotPrepMinutes = useMemo(() => {
+    const choice = configuration?.choices.find((item) => item.key === "carrots.prep");
+    const selected = selections["carrots.prep"];
+    return choice?.options?.find((option) => option.value === selected)?.activeMinutes ?? null;
+  }, [configuration, selections]);
+
   async function openRecipe(slug: string) {
     setError(null);
     const detail = await requestJson<RecipeDetail>(`/api/recipes/${slug}`);
     setRecipe(detail);
+    setSelections(defaultsFor(detail.variant.configuration));
     setActiveRun(null);
+    setViewingRecipeDuringRun(false);
     setRunEvents([]);
     setCurrentStepIndex(0);
     setFinishing(false);
@@ -158,28 +234,38 @@ export function App() {
       method: "POST",
       body: JSON.stringify({
         recipeId: recipe.id,
-        variantId: recipe.variant.id
+        variantId: recipe.variant.id,
+        selections
       })
     });
 
     setActiveRun(run);
+    setViewingRecipeDuringRun(false);
     setRunEvents([]);
     setCurrentStepIndex(0);
     setFinishing(false);
   }
 
   async function moveStep(nextIndex: number) {
-    if (!recipe || !activeRun) return;
-    const bounded = Math.max(0, Math.min(recipe.variant.steps.length - 1, nextIndex));
-    const step = recipe.variant.steps[bounded];
+    if (!activeRun || runSteps.length === 0) return;
+    const bounded = Math.max(0, Math.min(runSteps.length - 1, nextIndex));
+    const step = runSteps[bounded];
 
     await requestJson<{ ok: true }>(`/api/cook-runs/${activeRun.id}`, {
       method: "PATCH",
-      body: JSON.stringify({ currentStepId: step.id })
+      body: JSON.stringify(
+        activeRun.snapshot
+          ? { currentStepKey: step.key }
+          : { currentStepId: step.sourceStepId ?? step.key }
+      )
     });
 
     setCurrentStepIndex(bounded);
-    setActiveRun({ ...activeRun, currentStepId: step.id });
+    setActiveRun({
+      ...activeRun,
+      currentStepKey: activeRun.snapshot ? step.key : activeRun.currentStepKey,
+      currentStepId: !activeRun.snapshot ? step.sourceStepId ?? step.key : activeRun.currentStepId
+    });
   }
 
   async function refreshRun() {
@@ -198,9 +284,12 @@ export function App() {
     await requestJson(`/api/cook-runs/${activeRun.id}/events`, {
       method: "POST",
       body: JSON.stringify({
-        stepId: currentStep?.id ?? null,
+        stepId: currentRunStep?.sourceStepId ?? null,
         eventType,
-        text: eventText.trim()
+        text: eventText.trim(),
+        structuredData: activeRun.snapshot
+          ? { runStepKey: currentRunStep?.key ?? null }
+          : undefined
       })
     });
 
@@ -229,8 +318,36 @@ export function App() {
   function goHome() {
     setRecipe(null);
     setActiveRun(null);
+    setViewingRecipeDuringRun(false);
     setRunEvents([]);
     setFinishing(false);
+  }
+
+  function setChoice(key: string, value: RecipeSelectionValue) {
+    setSelections((current) => ({ ...current, [key]: value }));
+  }
+
+  function ingredientPresentation(ingredient: Ingredient) {
+    if (!configuration) return ingredient;
+    const includeChoice = configuration.choices.find(
+      (choice) => choice.ingredientId === ingredient.id && choice.kind === "toggle" && choice.key.endsWith(".include")
+    );
+    if (includeChoice && selections[includeChoice.key] === false) {
+      return { ...ingredient, omitted: true as const };
+    }
+
+    const formChoice = configuration.choices.find(
+      (choice) => choice.ingredientId === ingredient.id && choice.key.endsWith(".form")
+    );
+    if (!formChoice) return ingredient;
+    const selected = String(selections[formChoice.key] ?? formChoice.defaultValue);
+    const option = formChoice.options?.find((item) => item.value === selected);
+    return {
+      ...ingredient,
+      quantity: option?.quantity ?? ingredient.quantity,
+      form: option?.form ?? ingredient.form,
+      advisory: option?.advisory
+    };
   }
 
   if (!recipe) {
@@ -274,12 +391,18 @@ export function App() {
     );
   }
 
-  if (activeRun) {
+  if (activeRun && !viewingRecipeDuringRun) {
+    const prepCount = runSteps.filter((step) => step.stage === "prep").length;
+    const cookCount = runSteps.filter((step) => step.stage === "cook").length;
+    const sameStageSteps = runSteps.filter((step) => step.stage === currentRunStep?.stage);
+    const stageIndex = sameStageSteps.findIndex((step) => step.key === currentRunStep?.key) + 1;
+    const stageTotal = currentRunStep?.stage === "prep" ? prepCount : cookCount;
+
     return (
       <main className="shell cook-shell">
         <header className="compact-header">
-          <button className="text-button" onClick={() => void openRecipe(recipe.slug)}>
-            ← Recipe
+          <button className="text-button" onClick={() => setViewingRecipeDuringRun(true)}>
+            View Recipe
           </button>
           <div>
             <p className="eyebrow">Cook Mode</p>
@@ -294,10 +417,10 @@ export function App() {
           <>
             <section className="cook-stage" aria-labelledby="current-step">
               <p className="step-count">
-                Step {currentStepIndex + 1} of {recipe.variant.steps.length}
-                {currentStep?.stageKey ? ` · ${currentStep.stageKey}` : ""}
+                {currentRunStep?.stage === "prep" ? "Prep" : "Cook"} {stageIndex} of {stageTotal}
+                {currentRunStep?.stageKey ? ` · ${currentRunStep.stageKey}` : ""}
               </p>
-              <h2 id="current-step">{currentStep?.instruction}</h2>
+              <h2 id="current-step">{currentRunStep?.instruction}</h2>
 
               <div className="step-actions">
                 <button
@@ -308,7 +431,7 @@ export function App() {
                   Previous
                 </button>
                 <button
-                  disabled={currentStepIndex === recipe.variant.steps.length - 1}
+                  disabled={currentStepIndex === runSteps.length - 1}
                   onClick={() => void moveStep(currentStepIndex + 1)}
                 >
                   Next step
@@ -332,7 +455,7 @@ export function App() {
                 >
                   <option value="observation">Observation</option>
                   <option value="substitution">Substitution</option>
-                  <option value="setting-change">Setting change</option>
+                  <option value="setting-change">Setting / prep change</option>
                   <option value="intervention">Intervention</option>
                   <option value="note">Note</option>
                 </select>
@@ -343,7 +466,7 @@ export function App() {
                 <textarea
                   value={eventText}
                   onChange={(event) => setEventText(event.target.value)}
-                  placeholder="Example: The batter is thicker than the last time."
+                  placeholder="Example: I substituted half white onion and half red onion."
                   rows={3}
                 />
               </label>
@@ -433,11 +556,27 @@ export function App() {
   const isDraft = recipe.status === "draft";
   const isTested = recipe.status === "tested";
   const lifecycleLabel = isDraft ? "Draft recipe" : isTested ? "Tested recipe" : "Canonical recipe";
+  const ingredientSource =
+    activeRun?.snapshot?.configuredIngredients ?? recipe.variant.ingredients;
 
   return (
     <main className="shell">
+      {activeRun && viewingRecipeDuringRun && (
+        <div className="active-run-banner">
+          <div>
+            <strong>Cook Run is still active</strong>
+            <span>Your configured recipe is pinned for this run.</span>
+          </div>
+          <button onClick={() => setViewingRecipeDuringRun(false)}>
+            Return to Cooking Run
+          </button>
+        </div>
+      )}
+
       <header className="compact-header">
-        <button className="text-button" onClick={goHome}>← Recipes</button>
+        <button className="text-button" onClick={activeRun ? () => setViewingRecipeDuringRun(false) : goHome}>
+          {activeRun ? "← Cooking Run" : "← Recipes"}
+        </button>
         <div>
           <p className="eyebrow">{lifecycleLabel}</p>
           <h1>{recipe.title}</h1>
@@ -459,26 +598,122 @@ export function App() {
             <p>{recipe.knownImprovement}</p>
           </div>
         )}
-        <button className="primary-large" onClick={() => void startCookRun()}>
-          Start Cook Run
-        </button>
+        {!activeRun && (
+          <>
+            {carrotPrepMinutes !== null && (
+              <p className="planned-time">
+                Planned prep: about {carrotPrepMinutes} minutes with the selected carrot method.
+              </p>
+            )}
+            <button className="primary-large" onClick={() => void startCookRun()}>
+              Start Cook Run
+            </button>
+          </>
+        )}
       </section>
 
       <div className="recipe-columns">
         <section className="panel" aria-labelledby="ingredients">
-          <p className="eyebrow">Formula</p>
+          <p className="eyebrow">{activeRun ? "Pinned for this run" : "Configure before cooking"}</p>
           <h2 id="ingredients">Ingredients</h2>
-          <ul className="ingredient-list">
-            {recipe.variant.ingredients.map((ingredient) => (
-              <li key={ingredient.id}>
-                <strong>{ingredient.quantity}</strong>
-                <span>
-                  {ingredient.name}
-                  {ingredient.form ? `, ${ingredient.form}` : ""}
-                  {ingredient.optional ? " — optional" : ""}
-                </span>
-              </li>
-            ))}
+          <ul className="ingredient-list configurable-ingredients">
+            {ingredientSource.map((rawIngredient) => {
+              const ingredient = activeRun ? rawIngredient : ingredientPresentation(rawIngredient);
+              const includeChoice = !activeRun
+                ? configuration?.choices.find(
+                    (choice) =>
+                      choice.ingredientId === rawIngredient.id &&
+                      choice.kind === "toggle" &&
+                      choice.key.endsWith(".include")
+                  )
+                : undefined;
+              const formChoice = !activeRun
+                ? configuration?.choices.find(
+                    (choice) =>
+                      choice.ingredientId === rawIngredient.id &&
+                      choice.kind === "select" &&
+                      choice.key.endsWith(".form")
+                  )
+                : undefined;
+              const presentation = ingredient as Ingredient & {
+                omitted?: boolean;
+                advisory?: string;
+              };
+
+              return (
+                <li key={rawIngredient.id} className={presentation.omitted ? "ingredient-omitted" : ""}>
+                  <div>
+                    <strong>{presentation.quantity}</strong>
+                    <span>
+                      {presentation.name}
+                      {presentation.form ? `, ${presentation.form}` : ""}
+                    </span>
+                  </div>
+
+                  {!activeRun && (includeChoice || formChoice) && (
+                    <div className="ingredient-controls">
+                      {includeChoice && (
+                        <label className="inline-toggle">
+                          <input
+                            type="checkbox"
+                            checked={selections[includeChoice.key] !== false}
+                            onChange={(event) => setChoice(includeChoice.key, event.target.checked)}
+                          />
+                          Include
+                        </label>
+                      )}
+                      {formChoice && selections[`${rawIngredient.id}.include`] !== false && (
+                        <label>
+                          Form
+                          <select
+                            aria-label={`${rawIngredient.name} form`}
+                            value={String(selections[formChoice.key] ?? formChoice.defaultValue)}
+                            onChange={(event) => setChoice(formChoice.key, event.target.value)}
+                          >
+                            {formChoice.options?.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
+                      {includeChoice?.advisory && <p className="advisory">ⓘ {includeChoice.advisory}</p>}
+                      {presentation.advisory && <p className="advisory">ⓘ {presentation.advisory}</p>}
+                    </div>
+                  )}
+
+                  {!activeRun && rawIngredient.id === "carrots" && configuration && (
+                    <div className="ingredient-controls">
+                      <label className="inline-toggle">
+                        <input
+                          type="checkbox"
+                          checked={selections["carrots.peel"] !== false}
+                          onChange={(event) => setChoice("carrots.peel", event.target.checked)}
+                        />
+                        Peel carrots
+                      </label>
+                      <label>
+                        Prep with
+                        <select
+                          aria-label="Carrot prep method"
+                          value={String(selections["carrots.prep"] ?? "cuisinart")}
+                          onChange={(event) => setChoice("carrots.prep", event.target.value)}
+                        >
+                          {configuration.choices
+                            .find((choice) => choice.key === "carrots.prep")
+                            ?.options?.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}{option.activeMinutes ? ` · ~${option.activeMinutes} min` : ""}
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </section>
 
@@ -487,7 +722,7 @@ export function App() {
           <h2 id="settings">Kitchen settings</h2>
           <dl className="settings-list">
             {recipe.variant.equipmentSettings.map((setting) => (
-              <div key={setting.settingKey}>
+              <div key={`${setting.equipment}-${setting.settingKey}`}>
                 <dt>{setting.settingKey}</dt>
                 <dd>{setting.settingValue}</dd>
               </div>
@@ -505,6 +740,11 @@ export function App() {
             <li key={step.id}>{step.instruction}</li>
           ))}
         </ol>
+        {configuration && !activeRun && (
+          <p className="advisory">
+            ⓘ Your Cook Run will add the selected prep steps before these cooking steps and remove instructions for omitted optional ingredients.
+          </p>
+        )}
       </section>
 
       <section className="panel" aria-labelledby="history">
