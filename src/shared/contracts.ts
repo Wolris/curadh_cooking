@@ -28,10 +28,14 @@ export const startCookRunSchema = z.object({
 
 export const updateCookRunSchema = z.object({
   currentStepId: z.string().min(1).nullable().optional(),
-  currentStepKey: z.string().min(1).nullable().optional()
+  currentStepKey: z.string().min(1).nullable().optional(),
+  completedStepKeys: z.array(z.string().min(1)).optional()
 }).refine(
-  (value) => value.currentStepId !== undefined || value.currentStepKey !== undefined,
-  { message: "A current step identifier is required" }
+  (value) =>
+    value.currentStepId !== undefined ||
+    value.currentStepKey !== undefined ||
+    value.completedStepKeys !== undefined,
+  { message: "A Cook Run progress change is required" }
 );
 
 export const createCookRunEventSchema = z.object({
