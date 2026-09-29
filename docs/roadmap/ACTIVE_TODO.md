@@ -2,94 +2,88 @@
 
 ## Current phase
 
-**Product definition through the first concrete recipe.**
+**Recipe 0001 proven — transition into MVP product architecture.**
 
-The project is intentionally starting with a real recipe before locking the application schema or UI architecture.
+Recipe 0001 is now the first canonical Curadh Cooking recipe and its successful V3 Cook Run is preserved as separate evidence.
 
 ## CURRENT EXECUTION LOCK
 
-**AWAITING KITCHEN VALIDATION — Recipe 0001 Reconstruction V3: arrowroot/flax yeast sandwich bread.**
+**DECISION GATE — choose the initial internal MVP web architecture and persistence shape.**
 
-Recovered recipe history:
+Canonical product inputs now available:
 
-- household GF V1 was denser, did not use cassava, and used more eggs;
-- household GF V2 was less dense and used yeast;
-- the Breadman managed the rise as part of its program;
-- therefore the project recipe currently being reconstructed is V3.
+- Recipe 0001 — `recipes/0001-oatmeal-sandwich-bread.md`;
+- successful V3 Cook Run — `recipes/results/0001-v3-2026-09-28.md`;
+- Recipe / Variant / Cook Run / Result distinction — ADR-0002;
+- goal-first experience journey — Design Bible;
+- profile-first mapping precedence — ADR-0001.
 
-Owner target:
+### Architecture decision must support
 
-- sandwich + toast loaf;
-- soft/fluffy relative to prior gluten-free loaves;
-- between moist and dry, leaning dry;
-- flexible rather than crumbly;
-- lighter than V2 if possible;
-- mostly neutral/savory;
-- soft crust;
-- Breadman process.
+- goal-first find/build flow;
+- recipe library;
+- ingredients-on-hand context;
+- Profile + Mapping + explicit overrides;
+- Ingredient lookup;
+- Recipe + Variant + Cook Run + Result evidence;
+- equipment/tool settings;
+- structured Cook Mode state;
+- live deviations/observations;
+- recipe/result history;
+- source/provenance;
+- internal/private use first;
+- a clean future seam for contextual reasoning assistance without requiring it for the first usable build.
 
-Available candidate ingredients:
+### Decision boundaries
 
-- arrowroot;
-- flaxseed/meal;
-- cassava flour;
-- tigernut flour;
-- almond flour;
-- oatmeal/oat flour;
-- cornstarch;
-- eggs;
-- honey/maple;
-- baking powder;
-- baking soda;
-- active yeast;
-- salt;
-- olive oil;
-- butter;
-- apple cider vinegar;
-- milk;
-- coconut oil;
-- coconut milk.
+Do not:
 
-Current draft:
+- design a public social network;
+- require external AI for basic cooking flows;
+- overbuild multi-user/community infrastructure before internal use proves the model;
+- collapse Recipe and Cook Run evidence;
+- encode medical guarantees;
+- choose a complex distributed architecture without demonstrated need.
 
-- `recipes/drafts/0001-arrowroot-flax-sandwich-bread-v3.md`
+### Acceptance
 
-The earlier generated quick-bread draft was superseded before baking because it incorrectly treated yeast as a new variable rather than recovered V2 evidence.
-
-### Current validation request
-
-Bake Reconstruction V3 using the same successful V2 Breadman yeast cycle if remembered; otherwise prefer the machine's Gluten-Free cycle if available.
-
-After the loaf is completely cool, report:
-
-1. lift/density versus remembered V1/V2;
-2. crumb/flexibility;
-3. moisture/gumminess;
-4. sandwich + toast performance;
-5. flavor + crust;
-6. exact Breadman cycle and visible rise/collapse behavior;
-7. any hydration adjustment;
-8. approximate loaf height/shape;
-9. next-morning slicing behavior if available.
-
-### Acceptance for this lock
-
-- owner requirements captured — DONE;
-- ingredient inventory captured — DONE;
-- prior-version evidence corrected — DONE;
-- bounded V3 formula drafted — DONE;
-- Breadman process and doneness cues documented — DONE;
-- ingredient roles documented — DONE;
-- reportable bake-test matrix documented — DONE;
-- kitchen validation — PENDING;
-- revise from Jim's evidence — PENDING;
-- promote an approved recipe to Canonical only after owner approval — PENDING.
-
-### Scope boundary
-
-Do **not** begin application implementation or lock a broad ingredient/profile schema before Recipe 0001 gives us concrete recipe data to model.
+- select initial web/app stack;
+- select MVP persistence approach;
+- define minimum domain schema from Recipe 0001 evidence;
+- define first implementable vertical slice;
+- record material architecture decisions;
+- update roadmap to the first implementation lock.
 
 ## Recently closed
+
+### Recipe 0001 — Oatmeal Sandwich Bread — CANONICAL / SUCCESS
+
+Closure basis: Jim-reported kitchen validation on 2026-09-28.
+
+Successful markers:
+
+- moisture — target hit;
+- flexibility — target hit;
+- density/lightness — target hit; significantly lighter than earlier GF loaves;
+- flavor — target hit; delicious;
+- sandwich usefulness — successful;
+- crust — successful with warm butter finish.
+
+Known improvement opportunity:
+
+- loaf height/scale was roughly half the height of earlier GF loaves.
+
+The height result does not count against Recipe 0001 as a successful repeatable recipe.
+
+Actual successful Breadman evidence:
+
+- White / Light / 1.5 lb;
+- mixer blade removed at first rest;
+- batter smoothed with rubber spatula;
+- later machine spin/rest occurred without blade;
+- no extra milk added;
+- no supplemental oven heat;
+- about 2 Tbsp melted butter applied to all six sides while warm.
 
 ### Repository bootstrap — DONE
 
@@ -97,12 +91,5 @@ Do **not** begin application implementation or lock a broad ingredient/profile s
 - repository rules established;
 - Design Bible established;
 - project memory/status established;
-- profile-first mapping precedence recorded as ADR-0001;
+- ADR-0001 profile-first mapping precedence accepted;
 - recipe lifecycle established.
-
-## Next after Recipe 0001
-
-1. derive the minimum Recipe + Ingredient schema from the approved bread record;
-2. define the minimum Profile + Mapping model around that concrete recipe;
-3. decide the initial web stack and local/internal deployment shape;
-4. build the first recipe-library/ingredient-lookup slice.
