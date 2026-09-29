@@ -95,10 +95,19 @@ Branch:
    - tolerance notice tone;
    - estimated-conversion presentation.
 
-10. **Resume Recipe 0002 kitchen validation only after owner UI approval.**
-    - complete a real Cook Run;
-    - record result markers;
-    - reconcile evidence;
+10. **Support completed Cook Run correction before resuming kitchen validation.**
+    - Recent Cook Runs expose an **Edit run** action;
+    - editing a completed run does **not** reopen it or change its completed timestamp;
+    - show the frozen Run plan as read-only context;
+    - show all step-bound run notes grouped/labeled by their Prep/Cook step;
+    - allow completed-run notes to be added, edited, reclassified, or deleted;
+    - allow submitted result-marker outcomes/notes to be corrected;
+    - corrections update Cook Run evidence only and never rewrite the frozen Recipe snapshot;
+    - validate the already-submitted Recipe 0002 run can correct the garlic note from Setting / prep to Add.
+
+11. **Resume Recipe 0002 kitchen validation / evidence reconciliation after owner UI approval.**
+    - use the already-completed run as evidence once corrections are complete;
+    - reconcile result markers and deviations;
     - status promotion remains explicit.
 
 ### Implementation progress after owner review
