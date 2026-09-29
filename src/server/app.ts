@@ -191,10 +191,18 @@ function buildChickenSoupSnapshot(
       };
     });
 
-  const prepSteps: Array<{ key: string; stage: "prep"; instruction: string }> = [
+  const prepSteps: Array<{
+    key: string;
+    stage: "prep";
+    instruction: string;
+    ingredientId: string;
+    label: string;
+  }> = [
     {
       key: "prep-carrots",
       stage: "prep",
+      ingredientId: "carrots",
+      label: "Carrots",
       instruction: peelCarrots
         ? `Peel the carrots, then ${carrotPrep === "cuisinart"
             ? "cut them into pieces suitable for the Cuisinart / food processor."
@@ -209,6 +217,8 @@ function buildChickenSoupSnapshot(
     prepSteps.push({
       key: "prep-onion",
       stage: "prep",
+      ingredientId: "yellow-onion",
+      label: "Yellow onion",
       instruction: "Peel the yellow onion and cut it into quarters."
     });
   }
@@ -217,6 +227,8 @@ function buildChickenSoupSnapshot(
     prepSteps.push({
       key: "prep-celery",
       stage: "prep",
+      ingredientId: "celery",
+      label: "Celery",
       instruction: "Rinse and trim the celery, then cut the stalks in half."
     });
   }
@@ -225,6 +237,8 @@ function buildChickenSoupSnapshot(
     prepSteps.push({
       key: "prep-parsley",
       stage: "prep",
+      ingredientId: "parsley",
+      label: "Parsley",
       instruction:
         parsleyForm === "prepared"
           ? "Measure 2 tsp prepared or pre-chopped parsley."
@@ -361,8 +375,8 @@ export function buildServer(options: BuildServerOptions = {}) {
     db.prepare(`
       INSERT INTO cook_runs (
         id, recipe_id, variant_id, status, started_at, current_step_id,
-        current_step_key, configuration_snapshot_json
-      ) VALUES (?, ?, ?, 'active', ?, ?, ?, ?)
+        current_step_key, configuration_snapshot_json, completed_step_keys_json
+      ) VALUES (?, ?, ?, 'active', ?, ?, ?, ?, '[]')
     `).run(
       id,
       parsed.data.recipeId,
@@ -379,8 +393,26 @@ export function buildServer(options: BuildServerOptions = {}) {
       startedAt,
       currentStepId: firstStep?.sourceStepId ?? legacyFirstStep?.id ?? null,
       currentStepKey: firstStep?.key ?? null,
+      completedStepKeys: [],
       snapshot
     });
+  });
+
+  app.get("/api/cook-runs/active/latest", async () => {
+    const run = db.prepare(`
+      SELECT cr.id, cr.recipe_id AS recipeId, cr.variant_id AS variantId,
+             cr.status, cr.started_at AS startedAt,
+             cr.current_step_id AS currentStepId,
+             cr.current_step_key AS currentStepKey,
+             r.slug AS recipeSlug
+      FROM cook_runs cr
+      JOIN recipes r ON r.id = cr.recipe_id
+      WHERE cr.status = 'active'
+      ORDER BY cr.started_at DESC
+      LIMIT 1
+    `).get();
+
+    return run ?? null;
   });
 
   app.get<{ Params: { id: string } }>("/api/cook-runs/:id", async (request, reply) => {
@@ -388,7 +420,8 @@ export function buildServer(options: BuildServerOptions = {}) {
       SELECT id, recipe_id AS recipeId, variant_id AS variantId, status,
              started_at AS startedAt, completed_at AS completedAt,
              current_step_id AS currentStepId, current_step_key AS currentStepKey,
-             configuration_snapshot_json AS configurationSnapshotJson, notes
+             configuration_snapshot_json AS configurationSnapshotJson,
+             completed_step_keys_json AS completedStepKeysJson, notes
       FROM cook_runs WHERE id = ?
     `).get(request.params.id) as Record<string, unknown> | undefined;
 
@@ -409,6 +442,12 @@ export function buildServer(options: BuildServerOptions = {}) {
         : null;
     delete run.configurationSnapshotJson;
 
+    const completedStepKeys =
+      typeof run.completedStepKeysJson === "string" && run.completedStepKeysJson
+        ? JSON.parse(run.completedStepKeysJson)
+        : [];
+    delete run.completedStepKeysJson;
+
     const events = rawEvents.map((event) => {
       const structuredData =
         typeof event.structuredDataJson === "string" && event.structuredDataJson
@@ -424,26 +463,7 @@ export function buildServer(options: BuildServerOptions = {}) {
       return { ...rest, runStepKey, structuredData };
     });
 
-    return { ...run, snapshot, events };
-  });
-
-  app.patch<{ Params: { id: string } }>("/api/cook-runs/:id", async (request, reply) => {
-    const parsed = updateCookRunSchema.safeParse(request.body);
-    if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
-
-    const result = db.prepare(`
-      UPDATE cook_runs
-      SET current_step_id = COALESCE(?, current_step_id),
-          current_step_key = COALESCE(?, current_step_key)
-      WHERE id = ? AND status = 'active'
-    `).run(
-      parsed.data.currentStepId ?? null,
-      parsed.data.currentStepKey ?? null,
-      request.params.id
-    );
-
-    if (!result.changes) return reply.code(404).send({ error: "Active Cook Run not found" });
-    return { ok: true };
+    return { ...run, snapshot, completedStepKeys, events };
   });
 
   function runContainsStep(
@@ -463,6 +483,48 @@ export function buildServer(options: BuildServerOptions = {}) {
       ).get(run.variantId, runStepKey)
     );
   }
+
+  app.patch<{ Params: { id: string } }>("/api/cook-runs/:id", async (request, reply) => {
+    const parsed = updateCookRunSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
+
+    const run = db.prepare(`
+      SELECT variant_id AS variantId,
+             configuration_snapshot_json AS snapshotJson
+      FROM cook_runs
+      WHERE id = ? AND status = 'active'
+    `).get(request.params.id) as { variantId: string; snapshotJson?: string | null } | undefined;
+
+    if (!run) return reply.code(404).send({ error: "Active Cook Run not found" });
+
+    if (parsed.data.currentStepKey && !runContainsStep(run, parsed.data.currentStepKey)) {
+      return reply.code(400).send({ error: "Current step does not belong to this Cook Run" });
+    }
+    if (
+      parsed.data.completedStepKeys &&
+      parsed.data.completedStepKeys.some((key) => !runContainsStep(run, key))
+    ) {
+      return reply.code(400).send({ error: "Completed step does not belong to this Cook Run" });
+    }
+
+    const result = db.prepare(`
+      UPDATE cook_runs
+      SET current_step_id = COALESCE(?, current_step_id),
+          current_step_key = COALESCE(?, current_step_key),
+          completed_step_keys_json = COALESCE(?, completed_step_keys_json)
+      WHERE id = ? AND status = 'active'
+    `).run(
+      parsed.data.currentStepId ?? null,
+      parsed.data.currentStepKey ?? null,
+      parsed.data.completedStepKeys
+        ? JSON.stringify(parsed.data.completedStepKeys)
+        : null,
+      request.params.id
+    );
+
+    if (!result.changes) return reply.code(404).send({ error: "Active Cook Run not found" });
+    return { ok: true };
+  });
 
   app.post<{ Params: { id: string } }>("/api/cook-runs/:id/events", async (request, reply) => {
     const parsed = createCookRunEventSchema.safeParse(request.body);
