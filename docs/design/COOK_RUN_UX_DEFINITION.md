@@ -514,3 +514,14 @@ The fix must:
 - test every supported structured action type;
 - surface server persistence errors visibly;
 - preserve successfully recorded events through active-run recovery.
+
+
+### Run-note correction and navigation placement
+
+Owner review added three concrete requirements:
+
+- every run note/change is bound to the exact generated run step where it was recorded;
+- an existing run note can be edited, have its type corrected, or be deleted without changing the frozen Recipe/Run plan;
+- Previous / Next navigation is repeated immediately after the run-note area, before Finish Cook Run, because that is where attention naturally lands after entering feedback.
+
+When a note is edited from a later point in the run, the original step association remains intact unless a future explicit move-note interaction is designed.
