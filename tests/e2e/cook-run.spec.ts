@@ -6,6 +6,7 @@ test("Recipe 0001 can create a Cook Run, record reality, and save independent re
   await expect(
     page.getByRole("heading", { name: "What are you trying to make?" })
   ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Recipes and drafts" })).toBeVisible();
 
   await page.getByRole("button", { name: /Oatmeal Sandwich Bread/ }).click();
 
@@ -56,10 +57,25 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
   await expect(
     page.getByRole("heading", { name: "Homemade Chicken Soup" })
   ).toBeVisible();
+  await expect(page.getByText("Draft recipe", { exact: true })).toBeVisible();
+  await expect(page.getByText("What we know so far", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("What this Cook Run needs to test", { exact: true })
+  ).toBeVisible();
+  await expect(page.getByText("Planned setup", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(/This recipe stays Draft until the planned test is cooked/)
+  ).toBeVisible();
   await expect(page.getByText("20 minutes", { exact: true })).toBeVisible();
   await expect(page.getByText(/15 minutes natural/)).toBeVisible();
   await expect(page.getByText(/Cuisinart/)).toBeVisible();
   await expect(page.getByText("165°F / 74°C", { exact: true })).toBeVisible();
   await expect(page.getByText(/POTS: soup can be a useful fluid\/sodium vehicle/)).toBeVisible();
   await expect(page.getByText(/MCAS: do not apply a universal avoid list/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Start Cook Run" }).click();
+  await expect(page.getByText("Cook Mode")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Put the chicken, carrots, onion, celery, parsley/ })
+  ).toBeVisible();
 });
