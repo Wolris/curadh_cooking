@@ -251,7 +251,7 @@ export function App() {
           <div className="section-heading">
             <div>
               <p className="eyebrow">Recipe library</p>
-              <h2 id="recipe-library">Proven starting points</h2>
+              <h2 id="recipe-library">Recipes and drafts</h2>
             </div>
           </div>
 
@@ -430,12 +430,16 @@ export function App() {
     );
   }
 
+  const isDraft = recipe.status === "draft";
+  const isTested = recipe.status === "tested";
+  const lifecycleLabel = isDraft ? "Draft recipe" : isTested ? "Tested recipe" : "Canonical recipe";
+
   return (
     <main className="shell">
       <header className="compact-header">
         <button className="text-button" onClick={goHome}>← Recipes</button>
         <div>
-          <p className="eyebrow">Canonical recipe</p>
+          <p className="eyebrow">{lifecycleLabel}</p>
           <h1>{recipe.title}</h1>
         </div>
         <span className="status">{recipe.status}</span>
@@ -446,12 +450,12 @@ export function App() {
       <section className="recipe-intro">
         <p>{recipe.summary}</p>
         <div className="result-summary">
-          <strong>What we know works</strong>
+          <strong>{isDraft ? "What we know so far" : "What we know works"}</strong>
           <p>{recipe.knownResultSummary}</p>
         </div>
         {recipe.knownImprovement && (
           <div className="improvement">
-            <strong>Worth improving</strong>
+            <strong>{isDraft ? "What this Cook Run needs to test" : "Worth improving"}</strong>
             <p>{recipe.knownImprovement}</p>
           </div>
         )}
@@ -471,7 +475,7 @@ export function App() {
                 <span>
                   {ingredient.name}
                   {ingredient.form ? `, ${ingredient.form}` : ""}
-                  {ingredient.optional ? " — optional finish" : ""}
+                  {ingredient.optional ? " — optional" : ""}
                 </span>
               </li>
             ))}
@@ -479,7 +483,7 @@ export function App() {
         </section>
 
         <section className="panel" aria-labelledby="settings">
-          <p className="eyebrow">Proven setup</p>
+          <p className="eyebrow">{isDraft ? "Planned setup" : "Proven setup"}</p>
           <h2 id="settings">Kitchen settings</h2>
           <dl className="settings-list">
             {recipe.variant.equipmentSettings.map((setting) => (
@@ -507,7 +511,11 @@ export function App() {
         <p className="eyebrow">Evidence, not folklore</p>
         <h2 id="history">Recent Cook Runs</h2>
         {completedRuns.length === 0 ? (
-          <p>No app-recorded Cook Runs yet. Recipe 0001's original V3 evidence is preserved in the project record.</p>
+          <p>
+            {isDraft
+              ? "No completed Cook Runs yet. This recipe stays Draft until the planned test is cooked and its result markers are recorded."
+              : "No app-recorded Cook Runs yet. Existing recipe evidence is preserved in the project record."}
+          </p>
         ) : (
           <div className="history-list">
             {completedRuns.map((run) => (
