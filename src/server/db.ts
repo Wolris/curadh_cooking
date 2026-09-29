@@ -412,6 +412,120 @@ function seedRecipe0002(db: CuradhDb) {
   })();
 }
 
+
+function seedRecipe0003(db: CuradhDb) {
+  const existing = db.prepare("SELECT 1 FROM recipes WHERE id = ?").get("recipe-0003");
+  if (existing) return;
+
+  const createdAt = now();
+
+  db.transaction(() => {
+    db.prepare(
+      "INSERT INTO recipes (id, slug, title, status, summary, known_result_summary, known_improvement, canonical_variant_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    ).run(
+      "recipe-0003",
+      "whole-milk-yogurt-euro-cuisine",
+      "Whole-Milk Yogurt — Euro Cuisine",
+      "draft",
+      "Plain whole-milk yogurt for a Euro Cuisine 7-jar maker, cultured with Yogourmet Original and thickened with a small amount of unflavored gelatin.",
+      "The V1 method is established and the first kitchen run is underway, but the fully refrigerated result has not yet been evaluated.",
+      "Validate final set, creaminess, tang, graininess, whey separation, and whether 3.5 g gelatin gives the desired firmness without a gelatin-like texture.",
+      "recipe-0003-v1",
+      createdAt,
+      createdAt
+    );
+
+    db.prepare(
+      "INSERT INTO recipe_variants (id, recipe_id, label, status, yield_text, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    ).run(
+      "recipe-0003-v1",
+      "recipe-0003",
+      "V1 — whole milk + Yogourmet Original + gelatin",
+      "draft",
+      "About 4 cups / 7 partially filled 6-oz jars",
+      "Heat milk to 180°F / 82°C or the first boil, cool to 108–112°F / 42–44°C, add starter, incubate uncovered jars for 5–8 hours, then cap and refrigerate about 8 hours. A clean-finger warm-not-hot cue is retained as the no-thermometer fallback.",
+      createdAt
+    );
+
+    const ingredients = [
+      ["milk", "Milk", null],
+      ["unflavored-gelatin", "Unflavored gelatin", "Texture aid only; does not replace live yogurt culture."],
+      ["yogourmet-original-starter", "Yogourmet Original yogurt starter", "3 g sachet of live yogurt starter culture."]
+    ] as const;
+
+    const insertIngredient = db.prepare(
+      "INSERT OR IGNORE INTO ingredients (id, canonical_name, notes) VALUES (?, ?, ?)"
+    );
+    for (const ingredient of ingredients) insertIngredient.run(...ingredient);
+
+    const variantIngredients = [
+      ["milk", "4 cups", "whole milk", 1, 0],
+      ["unflavored-gelatin", "3.5 g", "unflavored; about half of a 7 g packet", 2, 0],
+      ["yogourmet-original-starter", "1 sachet (3 g)", "Original yogurt starter", 3, 0]
+    ] as const;
+
+    const insertVariantIngredient = db.prepare(
+      "INSERT INTO variant_ingredients (variant_id, ingredient_id, quantity_text, form_text, position, optional) VALUES ('recipe-0003-v1', ?, ?, ?, ?, ?)"
+    );
+    for (const ingredient of variantIngredients) insertVariantIngredient.run(...ingredient);
+
+    const steps = [
+      ["prep", "Clean and dry the seven yogurt jars and utensils. Keep the individual jar lids off during incubation."],
+      ["prep", "Mix 3.5 g unflavored gelatin into about 1/4 to 1/2 cup of the cold milk, then combine it with the remaining cold milk in a medium saucepan."],
+      ["heat", "Heat the milk and gelatin over medium heat, stirring the bottom regularly. Reach 180°F / 82°C or the first boil; without a thermometer, remove it promptly when strongly steaming milk swells or foams toward a boil."],
+      ["cool", "Cool the milk to 108–112°F / 42–44°C. Without a thermometer, Yogourmet's fallback cue is warm but not hot to a clean finger. A cold-water bath can speed cooling; avoid thermal shock with glass."],
+      ["culture", "Put about 1/2 cup of the cooled warm milk in a clean cup, stir in one full 3 g Yogourmet Original sachet until well dispersed, then gently stir it back into the remaining milk."],
+      ["incubate", "Divide the cultured milk among the seven Euro Cuisine jars; they will be only partially full."],
+      ["incubate", "Place the jars in the yogurt maker with the individual lids OFF, then put the machine's large clear cover on."],
+      ["incubate", "Incubate for at least 5 hours; use 5 to 8 hours as the first-run working window. Do not stir or repeatedly disturb the jars."],
+      ["chill", "At the end of incubation, turn off the machine, put the individual lids on the jars, and move them directly to the refrigerator."],
+      ["chill", "Refrigerate for about 8 hours before judging the final texture; the gelatin firms substantially during chilling."],
+      ["chill", "Keep refrigerated and consume within 7 days."]
+    ] as const;
+
+    const insertStep = db.prepare(
+      "INSERT INTO recipe_steps (id, variant_id, position, instruction, stage_key) VALUES (?, 'recipe-0003-v1', ?, ?, ?)"
+    );
+    steps.forEach(([stageKey, instruction], index) => {
+      const position = index + 1;
+      insertStep.run(`recipe-0003-v1-step-${position}`, position, instruction, stageKey);
+    });
+
+    const insertEquipment = db.prepare(
+      "INSERT OR IGNORE INTO equipment (id, name) VALUES (?, ?)"
+    );
+    insertEquipment.run("euro-cuisine-7jar-yogurt-maker", "Euro Cuisine 7-jar yogurt maker");
+    insertEquipment.run("stovetop", "Stovetop");
+    insertEquipment.run("refrigerator", "Refrigerator");
+
+    const insertSetting = db.prepare(
+      "INSERT INTO variant_equipment_settings (variant_id, equipment_id, setting_key, setting_value) VALUES ('recipe-0003-v1', ?, ?, ?)"
+    );
+    [
+      ["euro-cuisine-7jar-yogurt-maker", "Jar setup", "7 clean 6-oz jars; individual lids off during incubation"],
+      ["euro-cuisine-7jar-yogurt-maker", "Incubation", "Minimum 5 hours; target 5 to 8 hours for first run"],
+      ["stovetop", "Heat milk", "180°F / 82°C or first boil; medium heat and stir regularly"],
+      ["refrigerator", "Cold set", "Cap after incubation and refrigerate about 8 hours"]
+    ].forEach((setting) => insertSetting.run(...setting));
+
+    const markers = [
+      ["set-firmness", "Set / firmness", "Clearly set after refrigeration without becoming rubbery or gelatin-dessert-like."],
+      ["creaminess", "Creaminess", "Creamy whole-milk body rather than thin or chalky."],
+      ["tang-acidity", "Tang / acidity", "Pleasant cultured tang without becoming excessively sharp."],
+      ["smoothness", "Smoothness / graininess", "Smooth texture with no objectionable graininess."],
+      ["whey-separation", "Whey separation", "Minimal separation; record substantial whey pooling if present."],
+      ["overall-usefulness", "Overall usefulness / worth repeating", "Worth repeating as a practical homemade yogurt baseline."]
+    ] as const;
+
+    const insertMarker = db.prepare(
+      "INSERT INTO result_markers (id, recipe_id, marker_key, label, description, position) VALUES (?, 'recipe-0003', ?, ?, ?, ?)"
+    );
+    markers.forEach((marker, index) =>
+      insertMarker.run(`recipe-0003-marker-${marker[0]}`, marker[0], marker[1], marker[2], index + 1)
+    );
+  })();
+}
+
 export function openDatabase(dbPath = process.env.CURADH_DB_PATH ?? path.resolve("data/curadh-cooking.sqlite")) {
   if (dbPath !== ":memory:") {
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -422,6 +536,7 @@ export function openDatabase(dbPath = process.env.CURADH_DB_PATH ?? path.resolve
   runMigrations(db);
   seedRecipe0001(db);
   seedRecipe0002(db);
+  seedRecipe0003(db);
   ensureRecipe0002Configuration(db);
   return db;
 }
