@@ -347,6 +347,129 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
     expect(afterDelete.json().events).toHaveLength(0);
   });
 
+  it("corrects completed Cook Run notes and results without reopening the run", async () => {
+    app = buildServer({ dbPath: ":memory:" });
+
+    const detailResponse = await app.inject({
+      method: "GET",
+      url: "/api/recipes/homemade-chicken-soup"
+    });
+    const recipe = detailResponse.json();
+
+    const started = await app.inject({
+      method: "POST",
+      url: "/api/cook-runs",
+      payload: {
+        recipeId: recipe.id,
+        variantId: recipe.variant.id
+      }
+    });
+    const run = started.json();
+
+    const wrongNote = await app.inject({
+      method: "POST",
+      url: `/api/cook-runs/${run.id}/events`,
+      payload: {
+        runStepKey: run.currentStepKey,
+        eventType: "setting-change",
+        text: "I added 1 tsp Garlic Powder"
+      }
+    });
+    expect(wrongNote.statusCode).toBe(201);
+    const eventId = wrongNote.json().id;
+
+    const initialResults = recipe.resultMarkers.map((marker: { id: string }) => ({
+      resultMarkerId: marker.id,
+      outcome: "not-observed",
+      note: ""
+    }));
+
+    const completed = await app.inject({
+      method: "POST",
+      url: `/api/cook-runs/${run.id}/complete`,
+      payload: { results: initialResults }
+    });
+    expect(completed.statusCode).toBe(200);
+
+    const beforeCorrection = await app.inject({
+      method: "GET",
+      url: `/api/cook-runs/${run.id}`
+    });
+    const completedAt = beforeCorrection.json().completedAt;
+    expect(beforeCorrection.json().status).toBe("completed");
+
+    const correctedNote = await app.inject({
+      method: "PATCH",
+      url: `/api/cook-runs/${run.id}/events/${eventId}`,
+      payload: {
+        eventType: "ingredient-add",
+        text: "I added 1 tsp Garlic Powder",
+        runStepKey: run.currentStepKey
+      }
+    });
+    expect(correctedNote.statusCode).toBe(200);
+
+    const addedAfterCompletion = await app.inject({
+      method: "POST",
+      url: `/api/cook-runs/${run.id}/events`,
+      payload: {
+        runStepKey: run.currentStepKey,
+        eventType: "observation",
+        text: "Remembered this after submitting the run."
+      }
+    });
+    expect(addedAfterCompletion.statusCode).toBe(201);
+
+    const brothMarker = recipe.resultMarkers.find(
+      (marker: { markerKey: string }) => marker.markerKey === "broth-flavor"
+    );
+    const correctedResults = recipe.resultMarkers.map(
+      (marker: { id: string; markerKey: string }) => ({
+        resultMarkerId: marker.id,
+        outcome: marker.id === brothMarker.id ? "hit" : "not-observed",
+        note: marker.id === brothMarker.id ? "Corrected after submission." : ""
+      })
+    );
+
+    const resultsUpdate = await app.inject({
+      method: "PUT",
+      url: `/api/cook-runs/${run.id}/results`,
+      payload: { results: correctedResults }
+    });
+    expect(resultsUpdate.statusCode).toBe(200);
+
+    const afterCorrection = await app.inject({
+      method: "GET",
+      url: `/api/cook-runs/${run.id}`
+    });
+    const corrected = afterCorrection.json();
+
+    expect(corrected.status).toBe("completed");
+    expect(corrected.completedAt).toBe(completedAt);
+    expect(corrected.events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: eventId,
+          eventType: "ingredient-add",
+          text: "I added 1 tsp Garlic Powder"
+        }),
+        expect.objectContaining({
+          eventType: "observation",
+          text: "Remembered this after submitting the run."
+        })
+      ])
+    );
+    expect(corrected.results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          resultMarkerId: brothMarker.id,
+          outcome: "hit",
+          note: "Corrected after submission."
+        })
+      ])
+    );
+  });
+
   it("persists a Cook Run event and independent result markers", async () => {
     app = buildServer({ dbPath: ":memory:" });
 
