@@ -128,6 +128,7 @@ type ActiveRun = {
 type RunEvent = {
   id: string;
   stepId?: string | null;
+  runStepKey?: string | null;
   eventType: CookRunEventType;
   text: string;
   createdAt: string;
@@ -219,6 +220,8 @@ export function App() {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [eventType, setEventType] = useState<CookRunEventType>("observation");
   const [eventText, setEventText] = useState("");
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [editingRunStepKey, setEditingRunStepKey] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
   const [resultValues, setResultValues] = useState<Record<string, ResultOutcome>>({});
   const [resultNotes, setResultNotes] = useState<Record<string, string>>({});
@@ -256,6 +259,15 @@ export function App() {
 
   const currentRunStep = runSteps[currentStepIndex] ?? null;
 
+  function runStepLabel(runStepKey?: string | null) {
+    if (!runStepKey) return "Unknown step";
+    const step = runSteps.find((item) => item.key === runStepKey);
+    if (!step) return "Earlier step";
+    const sameStage = runSteps.filter((item) => item.stage === step.stage);
+    const index = sameStage.findIndex((item) => item.key === step.key) + 1;
+    return `${step.stage === "prep" ? "Prep" : "Cook"} ${index}`;
+  }
+
   const carrotPrepMinutes = useMemo(() => {
     const choice = configuration?.choices.find((item) => item.key === "carrots.prep");
     const selected = selections["carrots.prep"];
@@ -271,6 +283,9 @@ export function App() {
     setViewingRecipeDuringRun(false);
     setRunEvents([]);
     setCurrentStepIndex(0);
+    setEditingEventId(null);
+    setEditingRunStepKey(null);
+    setEventText("");
     setFinishing(false);
   }
 
@@ -291,6 +306,9 @@ export function App() {
     setViewingRecipeDuringRun(false);
     setRunEvents([]);
     setCurrentStepIndex(0);
+    setEditingEventId(null);
+    setEditingRunStepKey(null);
+    setEventText("");
     setFinishing(false);
   }
 
@@ -325,27 +343,75 @@ export function App() {
     setRunEvents(run.events);
   }
 
-  async function addEvent() {
+  async function saveEvent() {
     if (!activeRun || !eventText.trim()) return;
+    const runStepKey = editingRunStepKey ?? currentRunStep?.key ?? null;
+    if (!runStepKey) {
+      setError("A Cook Run note must be tied to a run step.");
+      return;
+    }
+
     setError(null);
 
     try {
-      await requestJson(`/api/cook-runs/${activeRun.id}/events`, {
-        method: "POST",
-        body: JSON.stringify({
-          stepId: currentRunStep?.sourceStepId ?? null,
-          eventType,
-          text: eventText.trim(),
-          structuredData: activeRun.snapshot
-            ? {
-                action: eventType,
-                runStepKey: currentRunStep?.key ?? null
-              }
-            : { action: eventType }
-        })
-      });
+      if (editingEventId) {
+        await requestJson(`/api/cook-runs/${activeRun.id}/events/${editingEventId}`, {
+          method: "PATCH",
+          body: JSON.stringify({
+            eventType,
+            text: eventText.trim(),
+            runStepKey
+          })
+        });
+      } else {
+        await requestJson(`/api/cook-runs/${activeRun.id}/events`, {
+          method: "POST",
+          body: JSON.stringify({
+            stepId: currentRunStep?.sourceStepId ?? null,
+            runStepKey,
+            eventType,
+            text: eventText.trim(),
+            structuredData: {
+              action: eventType,
+              runStepKey
+            }
+          })
+        });
+      }
 
       setEventText("");
+      setEditingEventId(null);
+      setEditingRunStepKey(null);
+      setEventType("observation");
+      await refreshRun();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
+  function editEvent(event: RunEvent) {
+    setEditingEventId(event.id);
+    setEditingRunStepKey(event.runStepKey ?? null);
+    setEventType(event.eventType);
+    setEventText(event.text);
+  }
+
+  function cancelEventEdit() {
+    setEditingEventId(null);
+    setEditingRunStepKey(null);
+    setEventType("observation");
+    setEventText("");
+  }
+
+  async function deleteEvent(event: RunEvent) {
+    if (!activeRun) return;
+    setError(null);
+
+    try {
+      await requestJson(`/api/cook-runs/${activeRun.id}/events/${event.id}`, {
+        method: "DELETE"
+      });
+      if (editingEventId === event.id) cancelEventEdit();
       await refreshRun();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -509,15 +575,21 @@ export function App() {
                     type="button"
                     className={eventType === action.type ? "change-action active" : "change-action"}
                     aria-pressed={eventType === action.type}
-                    onClick={() => {
-                      setEventType(action.type);
-                      setEventText("");
-                    }}
+                    onClick={() => setEventType(action.type)}
                   >
                     {action.label}
                   </button>
                 ))}
               </div>
+
+              {editingEventId && (
+                <div className="editing-note-banner">
+                  <span>Editing note from {runStepLabel(editingRunStepKey)}</span>
+                  <button type="button" className="text-button" onClick={cancelEventEdit}>
+                    Cancel edit
+                  </button>
+                </div>
+              )}
 
               <label>
                 {runChangeActions.find((action) => action.type === eventType)?.prompt ?? "What happened?"}
@@ -533,8 +605,10 @@ export function App() {
                 />
               </label>
 
-              <button onClick={() => void addEvent()} disabled={!eventText.trim()}>
-                Record {runChangeLabel(eventType).toLowerCase()}
+              <button onClick={() => void saveEvent()} disabled={!eventText.trim()}>
+                {editingEventId
+                  ? "Save note changes"
+                  : `Record ${runChangeLabel(eventType).toLowerCase()}`}
               </button>
 
               {runEvents.length > 0 && (
@@ -542,13 +616,48 @@ export function App() {
                   <h3>Run notes</h3>
                   {runEvents.map((event) => (
                     <article key={event.id}>
-                      <span>{runChangeLabel(event.eventType)}</span>
+                      <div className="event-log-meta">
+                        <span>{runChangeLabel(event.eventType)}</span>
+                        <span>{runStepLabel(event.runStepKey)}</span>
+                      </div>
                       <p>{event.text}</p>
+                      <div className="event-log-actions">
+                        <button
+                          type="button"
+                          className="text-button"
+                          onClick={() => editEvent(event)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="text-button danger-text"
+                          onClick={() => void deleteEvent(event)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </article>
                   ))}
                 </div>
               )}
             </section>
+
+            <div className="step-actions step-actions-after-notes" aria-label="Cook Run navigation after notes">
+              <button
+                className="secondary"
+                disabled={currentStepIndex === 0}
+                onClick={() => void moveStep(currentStepIndex - 1)}
+              >
+                Previous
+              </button>
+              <button
+                disabled={currentStepIndex === runSteps.length - 1}
+                onClick={() => void moveStep(currentStepIndex + 1)}
+              >
+                Next step
+              </button>
+            </div>
 
             <button className="finish-button" onClick={() => setFinishing(true)}>
               Finish Cook Run
