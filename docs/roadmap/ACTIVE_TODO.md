@@ -41,10 +41,12 @@ Latest owner-local full validation: **BLOCKED BY PLAYWRIGHT DEV-SERVER STARTUP**
 - pull/install/typecheck/test/build — PASS
 - Playwright Chromium install — PASS
 - Playwright timed out waiting for its configured local web servers before the E2E test started
-- normal manual development remains on web 5174 + API 3001
+- normal manual development uses web 5174 + API 3101
 - automated E2E is now isolated on dedicated web 5274 + API 3102
 - E2E ports are non-reusable so a true collision fails explicitly instead of silently attaching to another project
-- owner-local rerun required after CI validation
+- port 3001 was confirmed to belong to another local service (`GET /api/health` returned 404)
+- normal Curadh API default moved to 3101; owner-local browser review should use 5174 -> 3101
+- owner-local rerun required
 
 The browser automation proves:
 
