@@ -453,3 +453,137 @@ Recipe 0001 established the need for:
 - historical/incomplete evidence;
 - variants;
 - Cook Runs distinct from Recipes.
+
+
+## 12. Recipe configuration, prep, and Cook Run snapshots
+
+Recipe 0002 site-story review established that a recipe cannot be treated as one static ingredient list followed by one static sequence of cooking steps. The reusable Recipe should expose intentional configuration choices before cooking, and a Cook Run should preserve the exact choices used for that execution.
+
+### Recipe configuration before cooking
+
+The recipe detail view should support structured choices within the ingredient experience without turning every ingredient into a separate workflow.
+
+An ingredient row may expose:
+
+- **include / omit** when the recipe explicitly allows omission or has a supported omission path;
+- **form / preparation choice** when the recipe supports equivalent practical forms, such as a fresh/raw form versus a pre-chopped, dried, prepared, or packaged form;
+- **quantity / form guidance** appropriate to the selected form;
+- **profile / tolerance advisory** explaining why a person may prefer to omit, substitute, or inspect a packaged ingredient.
+
+These are related controls in one ingredient system, but they are not the same decision. Omitting an ingredient is different from selecting a different supported form.
+
+Alternative forms and conversions are authored recipe knowledge, not universal automatic conversions. A recipe may explicitly support a relationship such as fresh parsley versus a measured prepared form, but the product should not assume that every sprig, clove, stalk, bunch, or package has one universal volume conversion.
+
+### Profile-aware advisories, not medical alarms
+
+Ingredient advisories should remain calm, local, and actionable.
+
+For sensitivity-oriented guidance:
+
+- do not label an ingredient universally safe or unsafe for POTS, MCAS, or another condition;
+- explain that a person may omit or substitute an ingredient when their own profile calls for it;
+- when switching to a packaged/commercial form, surface a small advisory when ingredients, sodium, additives, freshness, or processing may matter to the selected profile;
+- allow explicit profile-level acceptance to remain authoritative over a generic mapping advisory.
+
+Warnings are meant to support a cooking choice, not frighten the cook or imply diagnosis.
+
+### Prep is part of the recipe and part of the run
+
+A Cook Run begins with **Prep**, not with the first heating/cooking instruction.
+
+Prep may include:
+
+- washing;
+- peeling;
+- trimming;
+- chopping;
+- measuring;
+- opening/draining;
+- assembling equipment;
+- other recipe-specific preparation.
+
+Optional prep operations may be toggled off when the recipe explicitly supports doing so. Disabled prep operations should disappear from the generated Cook Run rather than remain as irrelevant instructions.
+
+### Equipment/method choices affect prep and time
+
+Available equipment is a first-class constraint.
+
+A recipe may offer more than one supported preparation method for the same ingredient, for example:
+
+- food processor / Cuisinart;
+- knife;
+- peeler;
+- blender;
+- Instant Pot versus conventional pot where the recipe supports both.
+
+The selected method may change:
+
+- the generated prep instruction;
+- active prep time;
+- the displayed estimated recipe time;
+- the tools shown for the run.
+
+A future Kitchen Profile may supply defaults such as owned equipment, but recipe-level configuration must remain overrideable.
+
+### Start Cook Run freezes a snapshot
+
+**Recipe configuration → Start Cook Run snapshot → Run observations** is the canonical execution model.
+
+When the user selects **Start Cook Run**, the system must preserve the recipe configuration used for that run, including relevant:
+
+- included/omitted ingredients;
+- selected ingredient forms;
+- selected preparation methods;
+- enabled/disabled optional prep operations;
+- planned equipment/settings;
+- generated prep/cook sequence;
+- planned time assumptions.
+
+Subsequent changes to the reusable Recipe must not retroactively alter an in-progress or completed Cook Run.
+
+Changes made after the run starts are recorded as Cook Run evidence rather than silently mutating the Recipe snapshot.
+
+### Prep-first Cook Mode
+
+The generated Cook Run should lead the cook through all required Prep stages before the first cook/heating stage unless the recipe explicitly defines an interleaved workflow.
+
+Cook Mode should communicate stage and position, for example:
+
+- Prep 2 of 6;
+- Cook 1 of 7.
+
+The cook must be able to move backward or forward through the run without losing the current run state.
+
+### Recipe remains reachable during an active run
+
+An active Cook Run must not trap the user in one instruction.
+
+The cook should be able to:
+
+- view the complete recipe;
+- inspect the configured ingredient list;
+- review previous or upcoming steps;
+- return to the same active run position.
+
+Leaving Cook Mode to inspect the Recipe does not end or reset the run. The UI should provide a persistent and obvious **Return to Cooking Run** path while a run is active.
+
+### Record reality during the run
+
+During Cook Mode, the user should be able to record structured changes such as:
+
+- added an ingredient;
+- substituted an ingredient;
+- skipped an ingredient;
+- changed an amount;
+- changed a setting or preparation method;
+- recorded a freeform observation.
+
+For example, replacing one yellow onion with half a white onion plus half a red onion belongs to the Cook Run evidence. It does not automatically rewrite the reusable Recipe.
+
+At review/completion, the product may surface these deviations as candidates for a future recipe revision or Variant, but promotion remains an explicit decision.
+
+### Visual icon layer
+
+Simple icons for common tools/actions/ingredients are an accepted future interface layer, including examples such as knife, peeler, food processor/Cuisinart, Instant Pot, conventional pot, boiling water, and frequently used ingredients.
+
+Icons reinforce scanability; they do not replace text instructions or become a dependency for the underlying structured model.
