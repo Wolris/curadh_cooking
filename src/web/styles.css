@@ -508,3 +508,60 @@ button:disabled {
     width: 100%;
   }
 }
+
+
+.editing-note-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.75rem;
+  background: #f3ecdf;
+  border: 1px solid #d7c49f;
+  font-weight: 700;
+}
+
+.event-log-meta,
+.event-log-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.event-log-meta span:last-child {
+  color: #66775d;
+}
+
+.event-log-actions {
+  margin-top: 0.6rem;
+}
+
+.event-log-actions .text-button {
+  padding: 0.45rem 0.7rem;
+}
+
+.danger-text {
+  color: #8b3434;
+  border-color: #caa6a6;
+}
+
+.step-actions-after-notes {
+  margin: 0.25rem 0 0.75rem;
+  padding: 1rem 0;
+  border-top: 1px solid #d8d2c3;
+  border-bottom: 1px solid #d8d2c3;
+}
+
+@media (max-width: 760px) {
+  .editing-note-banner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .step-actions-after-notes > button {
+    flex: 1;
+  }
+}
