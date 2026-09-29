@@ -672,3 +672,61 @@ button:disabled {
   font-size: 0.9rem;
   line-height: 1.45;
 }
+
+
+.completed-run-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.7fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.completed-run-editor > div {
+  min-width: 0;
+}
+
+.completed-run-plan {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+}
+
+.completed-run-plan-step {
+  cursor: default;
+}
+
+.correction-note {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 0.9rem;
+  background: #eef2e9;
+  border: 1px solid #c8d4c3;
+}
+
+.history-run-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .completed-run-editor {
+    grid-template-columns: 1fr;
+  }
+
+  .completed-run-plan {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .history-run-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
