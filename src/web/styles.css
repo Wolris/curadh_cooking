@@ -661,3 +661,14 @@ button:disabled {
     max-height: none;
   }
 }
+
+
+.estimate-note {
+  margin: 0.55rem 0 0;
+  padding: 0.7rem 0.8rem;
+  border-radius: 0.7rem;
+  background: #eef2e9;
+  border-left: 3px solid #66775d;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
