@@ -156,6 +156,55 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
     expect(fetched.json().snapshot).toEqual(run.snapshot);
   });
 
+  it("persists newly structured ingredient-add Cook Run events", async () => {
+    app = buildServer({ dbPath: ":memory:" });
+
+    const detailResponse = await app.inject({
+      method: "GET",
+      url: "/api/recipes/homemade-chicken-soup"
+    });
+    const recipe = detailResponse.json();
+
+    const started = await app.inject({
+      method: "POST",
+      url: "/api/cook-runs",
+      payload: {
+        recipeId: recipe.id,
+        variantId: recipe.variant.id
+      }
+    });
+    expect(started.statusCode).toBe(201);
+    const run = started.json();
+
+    const event = await app.inject({
+      method: "POST",
+      url: `/api/cook-runs/${run.id}/events`,
+      payload: {
+        eventType: "ingredient-add",
+        text: "Added 1 tsp garlic powder.",
+        structuredData: {
+          action: "ingredient-add",
+          runStepKey: run.currentStepKey
+        }
+      }
+    });
+    expect(event.statusCode).toBe(201);
+
+    const runDetail = await app.inject({
+      method: "GET",
+      url: `/api/cook-runs/${run.id}`
+    });
+    expect(runDetail.statusCode).toBe(200);
+    expect(runDetail.json().events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          eventType: "ingredient-add",
+          text: "Added 1 tsp garlic powder."
+        })
+      ])
+    );
+  });
+
   it("persists a Cook Run event and independent result markers", async () => {
     app = buildServer({ dbPath: ":memory:" });
 
