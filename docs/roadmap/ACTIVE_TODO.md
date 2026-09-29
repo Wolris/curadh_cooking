@@ -36,11 +36,13 @@ Latest CI branch validation before the local-validator update: **PASS**
 - production build — PASS
 - Playwright browser vertical flow — PASS
 
-Latest owner-local full validation: **BLOCKED BY LOCAL PLAYWRIGHT BROWSER INSTALLATION**
+Latest owner-local full validation: **BLOCKED BY LOCAL DEV STARTUP RACE**
 
 - pull/install/typecheck/test/build — PASS
-- Playwright execution — did not start because Chromium was not installed locally
-- validator updated so full and `browser` modes run `npx playwright install chromium` before the E2E gate
+- Playwright Chromium install — PASS
+- Playwright launched, but Recipe 0001 never appeared because the React/Vite shell became available before the API was ready
+- Playwright now starts/waits for Fastify `/api/health` and Vite separately
+- Vite now uses `strictPort: true` on 5174 so it cannot silently move to another port
 - owner rerun required
 
 The browser automation proves:
