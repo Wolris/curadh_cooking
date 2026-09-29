@@ -15,7 +15,7 @@ const recipe0002Configuration = {
       label: "Yellow onion",
       ingredientId: "yellow-onion",
       defaultValue: true,
-      advisory: "Optional for this soup. Omit it if it does not fit the selected profile or current tolerance."
+      advisory: "Be aware of tolerance: this ingredient may work differently for different profiles. Omit or substitute it when it does not fit the selected profile."
     },
     {
       key: "celery.include",
@@ -23,7 +23,7 @@ const recipe0002Configuration = {
       label: "Celery",
       ingredientId: "celery",
       defaultValue: true,
-      advisory: "Optional for this soup. Omit it if it does not fit the selected profile or current tolerance."
+      advisory: "Be aware of tolerance: this ingredient may work differently for different profiles. Omit or substitute it when it does not fit the selected profile."
     },
     {
       key: "parsley.include",
@@ -31,7 +31,7 @@ const recipe0002Configuration = {
       label: "Parsley",
       ingredientId: "parsley",
       defaultValue: true,
-      advisory: "Optional for this soup. Omit it if it does not fit the selected profile or current tolerance."
+      advisory: "Be aware of tolerance: this ingredient may work differently for different profiles. Omit or substitute it when it does not fit the selected profile."
     },
     {
       key: "parsley.form",
@@ -51,7 +51,9 @@ const recipe0002Configuration = {
           label: "Prepared / pre-chopped parsley",
           quantity: "2 tsp",
           form: "prepared or pre-chopped",
-          advisory: "If using a commercial prepared product, check its ingredient list, sodium, additives, and freshness against the selected profile."
+          estimate: true,
+          estimateNote: "Unverified recipe estimate: about 2 tsp prepared parsley for the fresh sprigs used here. Actual volume varies with sprig size, chop, and packing.",
+          advisory: "Be aware of tolerance: if using a commercial prepared product, check its ingredient list, sodium, additives, and freshness against the selected profile."
         }
       ]
     },
