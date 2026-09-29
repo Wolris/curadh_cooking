@@ -4,13 +4,59 @@ import {
   completeCookRunSchema,
   createCookRunEventSchema,
   startCookRunSchema,
-  updateCookRunSchema
+  updateCookRunSchema,
+  type RecipeSelectionValue
 } from "../shared/contracts.js";
 import { openDatabase, type CuradhDb } from "./db.js";
 
 type BuildServerOptions = {
   dbPath?: string;
 };
+
+type RecipeChoiceOption = {
+  value: string;
+  label: string;
+  quantity?: string;
+  form?: string | null;
+  advisory?: string;
+  activeMinutes?: number;
+};
+
+type RecipeChoice = {
+  key: string;
+  kind: "toggle" | "select";
+  label: string;
+  ingredientId?: string;
+  defaultValue: RecipeSelectionValue;
+  advisory?: string;
+  options?: RecipeChoiceOption[];
+};
+
+type RecipeConfiguration = {
+  version: number;
+  choices: RecipeChoice[];
+};
+
+type RecipeIngredient = {
+  id: string;
+  name: string;
+  quantity: string;
+  form?: string | null;
+  optional: number;
+  position: number;
+};
+
+type RecipeStep = {
+  id: string;
+  position: number;
+  instruction: string;
+  stageKey?: string | null;
+};
+
+function parseConfiguration(value: unknown): RecipeConfiguration | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  return JSON.parse(value) as RecipeConfiguration;
+}
 
 function getRecipeDetail(db: CuradhDb, slug: string) {
   const recipe = db.prepare(`
@@ -25,7 +71,7 @@ function getRecipeDetail(db: CuradhDb, slug: string) {
   if (!recipe) return null;
 
   const variant = db.prepare(`
-    SELECT id, label, status, yield_text AS yieldText, notes
+    SELECT id, label, status, yield_text AS yieldText, notes, configuration_json AS configurationJson
     FROM recipe_variants
     WHERE id = ?
   `).get(recipe.canonicalVariantId) as Record<string, unknown>;
@@ -77,13 +123,17 @@ function getRecipeDetail(db: CuradhDb, slug: string) {
     ORDER BY rm.position
   `);
 
+  const configuration = parseConfiguration(variant.configurationJson);
+  delete variant.configurationJson;
+
   return {
     ...recipe,
     variant: {
       ...variant,
       ingredients,
       steps,
-      equipmentSettings
+      equipmentSettings,
+      configuration
     },
     resultMarkers,
     runs: runs.map((run) => ({
@@ -91,6 +141,148 @@ function getRecipeDetail(db: CuradhDb, slug: string) {
       results: resultQuery.all(run.id)
     }))
   };
+}
+
+function resolveSelections(
+  configuration: RecipeConfiguration | null,
+  requested: Record<string, RecipeSelectionValue> | undefined
+) {
+  const selections: Record<string, RecipeSelectionValue> = {};
+  for (const choice of configuration?.choices ?? []) {
+    const candidate = requested?.[choice.key] ?? choice.defaultValue;
+    if (choice.kind === "toggle") {
+      selections[choice.key] = typeof candidate === "boolean" ? candidate : Boolean(choice.defaultValue);
+      continue;
+    }
+    const allowed = new Set((choice.options ?? []).map((option) => option.value));
+    selections[choice.key] =
+      typeof candidate === "string" && allowed.has(candidate)
+        ? candidate
+        : choice.defaultValue;
+  }
+  return selections;
+}
+
+function buildChickenSoupSnapshot(
+  ingredients: RecipeIngredient[],
+  recipeSteps: RecipeStep[],
+  configuration: RecipeConfiguration,
+  selections: Record<string, RecipeSelectionValue>
+) {
+  const included = (key: string) => selections[key] !== false;
+  const carrotPrep = selections["carrots.prep"] === "knife" ? "knife" : "cuisinart";
+  const peelCarrots = selections["carrots.peel"] !== false;
+  const parsleyForm = selections["parsley.form"] === "prepared" ? "prepared" : "fresh";
+
+  const configuredIngredients = ingredients
+    .filter((ingredient) => {
+      if (ingredient.id === "yellow-onion") return included("yellow-onion.include");
+      if (ingredient.id === "celery") return included("celery.include");
+      if (ingredient.id === "parsley") return included("parsley.include");
+      return true;
+    })
+    .map((ingredient) => {
+      if (ingredient.id !== "parsley" || parsleyForm !== "prepared") return ingredient;
+      return {
+        ...ingredient,
+        quantity: "2 tsp",
+        form: "prepared or pre-chopped"
+      };
+    });
+
+  const prepSteps: Array<{ key: string; stage: "prep"; instruction: string }> = [
+    {
+      key: "prep-carrots",
+      stage: "prep",
+      instruction: peelCarrots
+        ? `Peel the carrots, then ${carrotPrep === "cuisinart"
+            ? "cut them into pieces suitable for the Cuisinart / food processor."
+            : "chop them into large pieces with a knife."}`
+        : carrotPrep === "cuisinart"
+          ? "Scrub the carrots well, leave the peel on, and cut them into pieces suitable for the Cuisinart / food processor."
+          : "Scrub the carrots well, leave the peel on, and chop them into large pieces with a knife."
+    }
+  ];
+
+  if (included("yellow-onion.include")) {
+    prepSteps.push({
+      key: "prep-onion",
+      stage: "prep",
+      instruction: "Peel the yellow onion and cut it into quarters."
+    });
+  }
+
+  if (included("celery.include")) {
+    prepSteps.push({
+      key: "prep-celery",
+      stage: "prep",
+      instruction: "Rinse and trim the celery, then cut the stalks in half."
+    });
+  }
+
+  if (included("parsley.include")) {
+    prepSteps.push({
+      key: "prep-parsley",
+      stage: "prep",
+      instruction:
+        parsleyForm === "prepared"
+          ? "Measure 2 tsp prepared or pre-chopped parsley."
+          : "Rinse 8 to 10 parsley sprigs; leave them whole for the broth."
+    });
+  }
+
+  const aromaticNames = [
+    included("yellow-onion.include") ? "onion" : null,
+    included("celery.include") ? "celery" : null,
+    included("parsley.include") ? "parsley" : null
+  ].filter(Boolean) as string[];
+
+  const addList = ["chicken", "carrots", ...aromaticNames, "2 tsp salt"];
+  const spentList = aromaticNames.length ? aromaticNames.join(", ") : "any spent aromatics";
+
+  const cookSteps = recipeSteps.map((step) => {
+    let instruction = step.instruction;
+    if (step.position === 1) {
+      instruction = `Put the ${addList.join(", ")} into the Instant Pot.`;
+    }
+    if (step.position === 7) {
+      instruction = `Strain the broth into a large bowl or second pot. Keep the cooked carrots; discard ${spentList} unless you intentionally want to retain them.`;
+    }
+    return {
+      key: `cook-${step.position}`,
+      sourceStepId: step.id,
+      stage: "cook" as const,
+      stageKey: step.stageKey ?? null,
+      instruction
+    };
+  });
+
+  const prepOption = configuration.choices
+    .find((choice) => choice.key === "carrots.prep")
+    ?.options?.find((option) => option.value === carrotPrep);
+
+  return {
+    version: 1,
+    selections,
+    configuredIngredients,
+    estimatedPrepMinutes: prepOption?.activeMinutes ?? null,
+    steps: [...prepSteps, ...cookSteps]
+  };
+}
+
+function buildCookRunSnapshot(
+  recipeId: string,
+  ingredients: RecipeIngredient[],
+  steps: RecipeStep[],
+  configuration: RecipeConfiguration | null,
+  requested: Record<string, RecipeSelectionValue> | undefined
+) {
+  if (!configuration) return null;
+  const selections = resolveSelections(configuration, requested);
+  if (recipeId === "recipe-0002") {
+    return buildChickenSoupSnapshot(ingredients, steps, configuration, selections);
+  }
+  return { version: 1, selections, configuredIngredients: ingredients, estimatedPrepMinutes: null, steps };
 }
 
 export function buildServer(options: BuildServerOptions = {}) {
@@ -124,35 +316,69 @@ export function buildServer(options: BuildServerOptions = {}) {
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
 
     const variant = db.prepare(`
-      SELECT 1 FROM recipe_variants WHERE id = ? AND recipe_id = ?
-    `).get(parsed.data.variantId, parsed.data.recipeId);
+      SELECT configuration_json AS configurationJson
+      FROM recipe_variants WHERE id = ? AND recipe_id = ?
+    `).get(parsed.data.variantId, parsed.data.recipeId) as { configurationJson?: string | null } | undefined;
 
     if (!variant) return reply.code(400).send({ error: "Recipe/variant mismatch" });
 
-    const firstStep = db.prepare(`
-      SELECT id FROM recipe_steps WHERE variant_id = ? ORDER BY position LIMIT 1
-    `).get(parsed.data.variantId) as { id: string } | undefined;
+    const ingredients = db.prepare(`
+      SELECT i.id, i.canonical_name AS name, vi.quantity_text AS quantity,
+             vi.form_text AS form, vi.optional, vi.position
+      FROM variant_ingredients vi
+      JOIN ingredients i ON i.id = vi.ingredient_id
+      WHERE vi.variant_id = ?
+      ORDER BY vi.position
+    `).all(parsed.data.variantId) as RecipeIngredient[];
+
+    const steps = db.prepare(`
+      SELECT id, position, instruction, stage_key AS stageKey
+      FROM recipe_steps
+      WHERE variant_id = ?
+      ORDER BY position
+    `).all(parsed.data.variantId) as RecipeStep[];
+
+    const configuration = parseConfiguration(variant.configurationJson);
+    const snapshot = buildCookRunSnapshot(
+      parsed.data.recipeId,
+      ingredients,
+      steps,
+      configuration,
+      parsed.data.selections
+    );
+
+    const firstStep = snapshot?.steps[0] as { key?: string; sourceStepId?: string; id?: string } | undefined;
+    const legacyFirstStep = !snapshot
+      ? db.prepare(`
+          SELECT id FROM recipe_steps WHERE variant_id = ? ORDER BY position LIMIT 1
+        `).get(parsed.data.variantId) as { id: string } | undefined
+      : undefined;
 
     const id = randomUUID();
     const startedAt = new Date().toISOString();
 
     db.prepare(`
       INSERT INTO cook_runs (
-        id, recipe_id, variant_id, status, started_at, current_step_id
-      ) VALUES (?, ?, ?, 'active', ?, ?)
+        id, recipe_id, variant_id, status, started_at, current_step_id,
+        current_step_key, configuration_snapshot_json
+      ) VALUES (?, ?, ?, 'active', ?, ?, ?, ?)
     `).run(
       id,
       parsed.data.recipeId,
       parsed.data.variantId,
       startedAt,
-      firstStep?.id ?? null
+      firstStep?.sourceStepId ?? legacyFirstStep?.id ?? null,
+      firstStep?.key ?? null,
+      snapshot ? JSON.stringify(snapshot) : null
     );
 
     return reply.code(201).send({
       id,
       status: "active",
       startedAt,
-      currentStepId: firstStep?.id ?? null
+      currentStepId: firstStep?.sourceStepId ?? legacyFirstStep?.id ?? null,
+      currentStepKey: firstStep?.key ?? null,
+      snapshot
     });
   });
 
@@ -160,7 +386,8 @@ export function buildServer(options: BuildServerOptions = {}) {
     const run = db.prepare(`
       SELECT id, recipe_id AS recipeId, variant_id AS variantId, status,
              started_at AS startedAt, completed_at AS completedAt,
-             current_step_id AS currentStepId, notes
+             current_step_id AS currentStepId, current_step_key AS currentStepKey,
+             configuration_snapshot_json AS configurationSnapshotJson, notes
       FROM cook_runs WHERE id = ?
     `).get(request.params.id) as Record<string, unknown> | undefined;
 
@@ -174,7 +401,13 @@ export function buildServer(options: BuildServerOptions = {}) {
       ORDER BY created_at, rowid
     `).all(request.params.id);
 
-    return { ...run, events };
+    const snapshot =
+      typeof run.configurationSnapshotJson === "string" && run.configurationSnapshotJson
+        ? JSON.parse(run.configurationSnapshotJson)
+        : null;
+    delete run.configurationSnapshotJson;
+
+    return { ...run, snapshot, events };
   });
 
   app.patch<{ Params: { id: string } }>("/api/cook-runs/:id", async (request, reply) => {
@@ -182,9 +415,15 @@ export function buildServer(options: BuildServerOptions = {}) {
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
 
     const result = db.prepare(`
-      UPDATE cook_runs SET current_step_id = ?
+      UPDATE cook_runs
+      SET current_step_id = COALESCE(?, current_step_id),
+          current_step_key = COALESCE(?, current_step_key)
       WHERE id = ? AND status = 'active'
-    `).run(parsed.data.currentStepId, request.params.id);
+    `).run(
+      parsed.data.currentStepId ?? null,
+      parsed.data.currentStepKey ?? null,
+      request.params.id
+    );
 
     if (!result.changes) return reply.code(404).send({ error: "Active Cook Run not found" });
     return { ok: true };
