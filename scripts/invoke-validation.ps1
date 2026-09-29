@@ -32,7 +32,7 @@ $script:failureExitCode = 1
 $presets = @{
     all = @(
         "git pull --ff-only",
-        "npm install",
+        "npm install --no-package-lock",
         "npm run typecheck",
         "npm run test",
         "npm run build",
@@ -56,7 +56,7 @@ $presets = @{
         "npm run typecheck"
     )
     install = @(
-        "npm install"
+        "npm install --no-package-lock"
     )
     audit = @(
         "npm audit"
