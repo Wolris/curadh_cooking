@@ -717,6 +717,204 @@ export function App() {
     );
   }
 
+  if (completedRunEdit) {
+    const completedSteps = runSteps;
+    const selectedNoteStepKey =
+      editingRunStepKey ?? completedRunEventStepKey ?? completedSteps[0]?.key ?? "";
+
+    return (
+      <main className="shell">
+        <header className="compact-header">
+          <button className="text-button" onClick={() => void closeCompletedRunEditor()}>
+            ← Back to recipe
+          </button>
+          <div>
+            <p className="eyebrow">Completed Cook Run</p>
+            <h1>Edit run evidence</h1>
+            <p>{formatDate(completedRunEdit.completedAt ?? completedRunEdit.startedAt)}</p>
+          </div>
+          <span className="run-badge">Completed</span>
+        </header>
+
+        {error && <p className="error" role="alert">{error}</p>}
+
+        <div className="correction-note">
+          <strong>This corrects the historical evidence only.</strong>
+          <span>
+            The run stays completed, and its frozen recipe configuration and completion time do not change.
+          </span>
+        </div>
+
+        <div className="completed-run-editor">
+          <div>
+            <section className="panel" aria-labelledby="completed-run-notes">
+              <p className="eyebrow">What actually happened</p>
+              <h2 id="completed-run-notes">Run notes</h2>
+
+              <label>
+                Step
+                <select
+                  aria-label="Run note step"
+                  value={selectedNoteStepKey}
+                  onChange={(event) => {
+                    if (editingEventId) {
+                      setEditingRunStepKey(event.target.value);
+                    } else {
+                      setCompletedRunEventStepKey(event.target.value);
+                    }
+                  }}
+                >
+                  {completedSteps.map((step) => (
+                    <option key={step.key} value={step.key}>
+                      {runStepLabel(step.key)} — {step.label ?? step.instruction.slice(0, 60)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="run-change-actions" role="group" aria-label="Completed run note type">
+                {runChangeActions.map((action) => (
+                  <button
+                    key={action.type}
+                    type="button"
+                    className={eventType === action.type ? "change-action active" : "change-action"}
+                    aria-pressed={eventType === action.type}
+                    onClick={() => setEventType(action.type)}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+
+              {editingEventId && (
+                <div className="editing-note-banner">
+                  <span>Editing note from {runStepLabel(editingRunStepKey)}</span>
+                  <button type="button" className="text-button" onClick={cancelEventEdit}>
+                    Cancel edit
+                  </button>
+                </div>
+              )}
+
+              <label>
+                {runChangeActions.find((action) => action.type === eventType)?.prompt ?? "What happened?"}
+                <textarea
+                  aria-label="Completed run change details"
+                  value={eventText}
+                  onChange={(event) => setEventText(event.target.value)}
+                  placeholder={
+                    runChangeActions.find((action) => action.type === eventType)?.placeholder ??
+                    "Describe what changed."
+                  }
+                  rows={3}
+                />
+              </label>
+
+              <button onClick={() => void saveEvent()} disabled={!eventText.trim() || !selectedNoteStepKey}>
+                {editingEventId
+                  ? "Save note changes"
+                  : `Add ${runChangeLabel(eventType).toLowerCase()} note`}
+              </button>
+
+              {completedRunEdit.events.length > 0 && (
+                <div className="event-log" aria-label="Completed Cook Run notes">
+                  {completedRunEdit.events.map((event) => (
+                    <article key={event.id}>
+                      <div className="event-log-meta">
+                        <span>{runChangeLabel(event.eventType)}</span>
+                        <span>{runStepLabel(event.runStepKey)}</span>
+                      </div>
+                      <p>{event.text}</p>
+                      <div className="event-log-actions">
+                        <button type="button" className="text-button" onClick={() => editEvent(event)}>
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="text-button danger-text"
+                          onClick={() => void deleteEvent(event)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="panel" aria-labelledby="completed-run-results">
+              <p className="eyebrow">Submitted outcome</p>
+              <h2 id="completed-run-results">Result markers</h2>
+              <p>Correct ratings or notes without reopening the Cook Run.</p>
+
+              <div className="result-list">
+                {recipe.resultMarkers.map((marker) => (
+                  <fieldset key={marker.id}>
+                    <legend>{marker.label}</legend>
+                    {marker.description && <p>{marker.description}</p>}
+                    <label>
+                      Outcome
+                      <select
+                        aria-label={`Completed ${marker.label} outcome`}
+                        value={completedResultValues[marker.id] ?? "not-observed"}
+                        onChange={(event) =>
+                          setCompletedResultValues({
+                            ...completedResultValues,
+                            [marker.id]: event.target.value as ResultOutcome
+                          })
+                        }
+                      >
+                        <option value="hit">Hit</option>
+                        <option value="mixed">Mixed / could improve</option>
+                        <option value="miss">Miss</option>
+                        <option value="not-observed">Not observed</option>
+                      </select>
+                    </label>
+                    <label>
+                      Note
+                      <input
+                        aria-label={`Completed ${marker.label} note`}
+                        value={completedResultNotes[marker.id] ?? ""}
+                        onChange={(event) =>
+                          setCompletedResultNotes({
+                            ...completedResultNotes,
+                            [marker.id]: event.target.value
+                          })
+                        }
+                      />
+                    </label>
+                  </fieldset>
+                ))}
+              </div>
+
+              <button onClick={() => void saveCompletedResults()}>
+                Save result corrections
+              </button>
+            </section>
+          </div>
+
+          <aside className="panel completed-run-plan" aria-label="Frozen run plan">
+            <p className="eyebrow">Read-only context</p>
+            <h2>Frozen run plan</h2>
+            <ol className="run-outline">
+              {completedSteps.map((step, index) => (
+                <li key={step.key}>
+                  <div className="outline-step completed-run-plan-step">
+                    <span className="outline-marker">{index + 1}</span>
+                    <span className="outline-copy">
+                      <strong>{runStepLabel(step.key)}</strong>
+                      <small>{step.instruction}</small>
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </aside>
+        </div>
+      </main>
+    );
+  }
+
   if (activeRun && !viewingRecipeDuringRun) {
     const prepSteps = runSteps.filter((step) => step.stage === "prep");
     const cookSteps = runSteps.filter((step) => step.stage === "cook");
@@ -870,7 +1068,7 @@ export function App() {
               </button>
               <button
                 disabled={currentStepIndex === runSteps.length - 1}
-                onClick={() => void moveStep(currentStepIndex + 1)}
+                onClick={() => void advanceStep()}
               >
                 Next step
               </button>
@@ -1238,7 +1436,16 @@ export function App() {
           <div className="history-list">
             {completedRuns.map((run) => (
               <article key={run.id}>
-                <strong>{formatDate(run.completedAt ?? run.startedAt)}</strong>
+                <div className="history-run-header">
+                  <strong>{formatDate(run.completedAt ?? run.startedAt)}</strong>
+                  <button
+                    type="button"
+                    className="text-button"
+                    onClick={() => void openCompletedRun(run.id)}
+                  >
+                    Edit run
+                  </button>
+                </div>
                 <div className="marker-row">
                   {run.results.map((result) => (
                     <span key={result.label} className={`marker marker-${result.outcome}`}>
