@@ -412,7 +412,7 @@ export function App() {
         method: "DELETE"
       });
       if (editingEventId === event.id) cancelEventEdit();
-      await refreshRun();
+      setRunEvents((current) => current.filter((item) => item.id !== event.id));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     }
