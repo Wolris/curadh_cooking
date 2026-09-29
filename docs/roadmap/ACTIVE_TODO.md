@@ -46,6 +46,17 @@ The browser automation proves:
 - `Height / rise = mixed` can coexist with `Flavor = hit`;
 - the completed run appears in Recipe history.
 
+### Local validation entrypoint
+
+Windows validation now mirrors the established Mundane Adventures workflow:
+
+- `validate.cmd` — full pull/install/typecheck/test/build/browser validation;
+- `validate.cmd quick` — typecheck/test/build without pull/install/browser;
+- `validate.cmd browser` — Playwright browser validation only;
+- `validate.cmd -Branch <name>` — fetch/switch/pull the requested branch before validating;
+- archived logs live under ignored `validation-logs/`, with `latest.txt` as the handoff/debug artifact;
+- the validator reports start/end branch + commit, working-tree state, individual step results, and preserves failure exit codes.
+
 ### Owner/browser validation requested
 
 Review the current functional scaffolding, not final visual design.
