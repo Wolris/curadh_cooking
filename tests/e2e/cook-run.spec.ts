@@ -19,7 +19,7 @@ test("Recipe 0001 can create a Cook Run, record reality, and save independent re
   await page.getByRole("button", { name: "Start Cook Run" }).click();
   await expect(page.getByText("Cook Mode")).toBeVisible();
 
-  await page.getByLabel("Observation or change").fill(
+  await page.getByLabel("Change details").fill(
     "Batter is thicker than the last time, but still cohesive."
   );
   await page.getByRole("button", { name: "Record observation" }).click();
@@ -98,4 +98,18 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
 
   await page.getByRole("button", { name: "Return to Cooking Run" }).click();
   await expect(page.getByText("Cook Mode")).toBeVisible();
+
+  await page.getByRole("button", { name: "Substitute", exact: true }).click();
+  await expect(page.getByLabel("Change details")).toHaveAttribute(
+    "placeholder",
+    /white onion.*red onion/i
+  );
+  await page.getByLabel("Change details").fill(
+    "Used 1/2 white onion + 1/2 red onion instead of 1 yellow onion."
+  );
+  await page.getByRole("button", { name: "Record substitute" }).click();
+  await expect(page.getByText("Substitute", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Used 1/2 white onion + 1/2 red onion instead of 1 yellow onion.")
+  ).toBeVisible();
 });
