@@ -15,14 +15,21 @@ export const resultOutcomeSchema = z.enum([
   "not-observed"
 ]);
 
+export const recipeSelectionValueSchema = z.union([z.string(), z.boolean()]);
+
 export const startCookRunSchema = z.object({
   recipeId: z.string().min(1),
-  variantId: z.string().min(1)
+  variantId: z.string().min(1),
+  selections: z.record(z.string(), recipeSelectionValueSchema).optional()
 });
 
 export const updateCookRunSchema = z.object({
-  currentStepId: z.string().min(1).nullable()
-});
+  currentStepId: z.string().min(1).nullable().optional(),
+  currentStepKey: z.string().min(1).nullable().optional()
+}).refine(
+  (value) => value.currentStepId !== undefined || value.currentStepKey !== undefined,
+  { message: "A current step identifier is required" }
+);
 
 export const createCookRunEventSchema = z.object({
   stepId: z.string().min(1).nullable().optional(),
@@ -42,4 +49,5 @@ export const completeCookRunSchema = z.object({
 });
 
 export type CookRunEventType = z.infer<typeof cookRunEventTypeSchema>;
+export type RecipeSelectionValue = z.infer<typeof recipeSelectionValueSchema>;
 export type ResultOutcome = z.infer<typeof resultOutcomeSchema>;
