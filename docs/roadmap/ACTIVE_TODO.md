@@ -43,7 +43,8 @@ Latest owner-local full validation: **BLOCKED BY LOCAL DEV STARTUP RACE**
 - Playwright launched, but Recipe 0001 never appeared because the React/Vite shell became available before the API was ready
 - Playwright now starts/waits for Fastify `/api/health` and Vite separately
 - Vite now uses `strictPort: true` on 5174 so it cannot silently move to another port
-- owner rerun required
+- corrected startup model: CI PASS, including Playwright vertical flow
+- owner-local rerun required
 
 The browser automation proves:
 
