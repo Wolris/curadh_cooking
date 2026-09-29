@@ -329,23 +329,27 @@ export function App() {
     if (!activeRun || !eventText.trim()) return;
     setError(null);
 
-    await requestJson(`/api/cook-runs/${activeRun.id}/events`, {
-      method: "POST",
-      body: JSON.stringify({
-        stepId: currentRunStep?.sourceStepId ?? null,
-        eventType,
-        text: eventText.trim(),
-        structuredData: activeRun.snapshot
-          ? {
-              action: eventType,
-              runStepKey: currentRunStep?.key ?? null
-            }
-          : { action: eventType }
-      })
-    });
+    try {
+      await requestJson(`/api/cook-runs/${activeRun.id}/events`, {
+        method: "POST",
+        body: JSON.stringify({
+          stepId: currentRunStep?.sourceStepId ?? null,
+          eventType,
+          text: eventText.trim(),
+          structuredData: activeRun.snapshot
+            ? {
+                action: eventType,
+                runStepKey: currentRunStep?.key ?? null
+              }
+            : { action: eventType }
+        })
+      });
 
-    setEventText("");
-    await refreshRun();
+      setEventText("");
+      await refreshRun();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
   }
 
   async function finishRun() {
