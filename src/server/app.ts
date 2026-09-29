@@ -4,6 +4,7 @@ import {
   completeCookRunSchema,
   createCookRunEventSchema,
   startCookRunSchema,
+  updateCookRunEventSchema,
   updateCookRunSchema,
   type RecipeSelectionValue
 } from "../shared/contracts.js";
@@ -393,19 +394,35 @@ export function buildServer(options: BuildServerOptions = {}) {
 
     if (!run) return reply.code(404).send({ error: "Cook Run not found" });
 
-    const events = db.prepare(`
-      SELECT id, step_id AS stepId, event_type AS eventType, text,
+    const rawEvents = db.prepare(`
+      SELECT id, step_id AS stepId, run_step_key AS runStepKey,
+             event_type AS eventType, text,
              structured_data_json AS structuredDataJson, created_at AS createdAt
       FROM cook_run_events
       WHERE cook_run_id = ?
       ORDER BY created_at, rowid
-    `).all(request.params.id);
+    `).all(request.params.id) as Array<Record<string, unknown>>;
 
     const snapshot =
       typeof run.configurationSnapshotJson === "string" && run.configurationSnapshotJson
         ? JSON.parse(run.configurationSnapshotJson)
         : null;
     delete run.configurationSnapshotJson;
+
+    const events = rawEvents.map((event) => {
+      const structuredData =
+        typeof event.structuredDataJson === "string" && event.structuredDataJson
+          ? JSON.parse(event.structuredDataJson)
+          : null;
+      const runStepKey =
+        typeof event.runStepKey === "string" && event.runStepKey
+          ? event.runStepKey
+          : typeof structuredData?.runStepKey === "string"
+            ? structuredData.runStepKey
+            : event.stepId ?? null;
+      const { structuredDataJson, ...rest } = event;
+      return { ...rest, runStepKey, structuredData };
+    });
 
     return { ...run, snapshot, events };
   });
@@ -429,34 +446,111 @@ export function buildServer(options: BuildServerOptions = {}) {
     return { ok: true };
   });
 
+  function runContainsStep(
+    run: { variantId: string; snapshotJson?: string | null },
+    runStepKey: string
+  ) {
+    if (run.snapshotJson) {
+      const snapshot = JSON.parse(run.snapshotJson) as {
+        steps?: Array<{ key?: string }>;
+      };
+      return Boolean(snapshot.steps?.some((step) => step.key === runStepKey));
+    }
+
+    return Boolean(
+      db.prepare(
+        "SELECT 1 FROM recipe_steps WHERE variant_id = ? AND id = ?"
+      ).get(run.variantId, runStepKey)
+    );
+  }
+
   app.post<{ Params: { id: string } }>("/api/cook-runs/:id/events", async (request, reply) => {
     const parsed = createCookRunEventSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
 
-    const activeRun = db.prepare(
-      "SELECT 1 FROM cook_runs WHERE id = ? AND status = 'active'"
-    ).get(request.params.id);
+    const activeRun = db.prepare(`
+      SELECT variant_id AS variantId,
+             configuration_snapshot_json AS snapshotJson
+      FROM cook_runs
+      WHERE id = ? AND status = 'active'
+    `).get(request.params.id) as { variantId: string; snapshotJson?: string | null } | undefined;
 
     if (!activeRun) return reply.code(404).send({ error: "Active Cook Run not found" });
+    if (!runContainsStep(activeRun, parsed.data.runStepKey)) {
+      return reply.code(400).send({ error: "Run note step does not belong to this Cook Run" });
+    }
 
     const id = randomUUID();
     const createdAt = new Date().toISOString();
     db.prepare(`
       INSERT INTO cook_run_events (
-        id, cook_run_id, step_id, event_type, text, structured_data_json, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        id, cook_run_id, step_id, run_step_key, event_type, text,
+        structured_data_json, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       request.params.id,
       parsed.data.stepId ?? null,
+      parsed.data.runStepKey,
       parsed.data.eventType,
       parsed.data.text,
       parsed.data.structuredData ? JSON.stringify(parsed.data.structuredData) : null,
       createdAt
     );
 
-    return reply.code(201).send({ id, createdAt });
+    return reply.code(201).send({
+      id,
+      runStepKey: parsed.data.runStepKey,
+      createdAt
+    });
   });
+
+  app.patch<{ Params: { id: string; eventId: string } }>(
+    "/api/cook-runs/:id/events/:eventId",
+    async (request, reply) => {
+      const parsed = updateCookRunEventSchema.safeParse(request.body);
+      if (!parsed.success) return reply.code(400).send({ error: parsed.error.flatten() });
+
+      const run = db.prepare(`
+        SELECT variant_id AS variantId,
+               configuration_snapshot_json AS snapshotJson
+        FROM cook_runs
+        WHERE id = ?
+      `).get(request.params.id) as { variantId: string; snapshotJson?: string | null } | undefined;
+
+      if (!run) return reply.code(404).send({ error: "Cook Run not found" });
+      if (!runContainsStep(run, parsed.data.runStepKey)) {
+        return reply.code(400).send({ error: "Run note step does not belong to this Cook Run" });
+      }
+
+      const result = db.prepare(`
+        UPDATE cook_run_events
+        SET event_type = ?, text = ?, run_step_key = ?
+        WHERE id = ? AND cook_run_id = ?
+      `).run(
+        parsed.data.eventType,
+        parsed.data.text,
+        parsed.data.runStepKey,
+        request.params.eventId,
+        request.params.id
+      );
+
+      if (!result.changes) return reply.code(404).send({ error: "Cook Run note not found" });
+      return { ok: true };
+    }
+  );
+
+  app.delete<{ Params: { id: string; eventId: string } }>(
+    "/api/cook-runs/:id/events/:eventId",
+    async (request, reply) => {
+      const result = db.prepare(
+        "DELETE FROM cook_run_events WHERE id = ? AND cook_run_id = ?"
+      ).run(request.params.eventId, request.params.id);
+
+      if (!result.changes) return reply.code(404).send({ error: "Cook Run note not found" });
+      return { ok: true };
+    }
+  );
 
   app.post<{ Params: { id: string } }>("/api/cook-runs/:id/complete", async (request, reply) => {
     const parsed = completeCookRunSchema.safeParse(request.body);
