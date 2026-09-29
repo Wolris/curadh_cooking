@@ -31,6 +31,23 @@ The Recipe 0002 review established these requirements:
 11. During a run the cook can record added/substituted/skipped ingredients, changed amounts/settings, and observations without silently rewriting the Recipe.
 12. Simple tool/action/ingredient icons are accepted as a later visual layer, not a prerequisite for the structured workflow.
 
+### Implementation progress
+
+Implemented on this branch:
+
+- Slice A foundation: typed recipe selections, recipe configuration storage, immutable Cook Run configuration snapshot, and persisted generated run position;
+- Slice B proving data: Recipe 0002 include/omit choices, authored parsley prepared-form alternative, optional carrot peeling, Cuisinart/knife carrot prep choices, calm advisories, and method-specific prep estimates;
+- Slice C initial UI: reversible ingredient/form/prep controls on Recipe 0002 with planned prep-time feedback;
+- Slice D initial Cook Mode: server-generated prep-first run plan, omission-aware instructions, Prep/Cook progress, and snapshot-driven navigation;
+- recipe inspection during an active run now preserves the run and exposes a Return to Cooking Run path.
+
+Still intentionally open under the same lock:
+
+- finish structured live ingredient-change affordances beyond the existing event capture;
+- complete automated/browser validation on the latest head;
+- owner browser/story review;
+- reconcile any review findings before resuming Recipe 0002 kitchen validation.
+
 ### Ordered implementation slices
 
 #### Slice A — domain contract + persistence foundation
