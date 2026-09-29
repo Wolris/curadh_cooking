@@ -161,6 +161,54 @@ function defaultsFor(configuration?: RecipeConfiguration | null) {
   );
 }
 
+const runChangeActions: Array<{
+  type: CookRunEventType;
+  label: string;
+  prompt: string;
+  placeholder: string;
+}> = [
+  {
+    type: "observation",
+    label: "Observation",
+    prompt: "What did you notice?",
+    placeholder: "Example: The broth looks cloudier than expected."
+  },
+  {
+    type: "substitution",
+    label: "Substitute",
+    prompt: "What did you substitute?",
+    placeholder: "Example: I used 1/2 white onion + 1/2 red onion instead of 1 yellow onion."
+  },
+  {
+    type: "ingredient-skip",
+    label: "Skip",
+    prompt: "What did you skip?",
+    placeholder: "Example: I skipped the celery."
+  },
+  {
+    type: "ingredient-add",
+    label: "Add",
+    prompt: "What did you add?",
+    placeholder: "Example: I added another 1/2 cup of water."
+  },
+  {
+    type: "amount-change",
+    label: "Amount",
+    prompt: "What amount changed?",
+    placeholder: "Example: I used 1 tsp salt instead of 2 tsp."
+  },
+  {
+    type: "setting-change",
+    label: "Setting / prep",
+    prompt: "What setting or prep method changed?",
+    placeholder: "Example: I chopped the carrots by hand instead of using the food processor."
+  }
+];
+
+function runChangeLabel(type: CookRunEventType) {
+  return runChangeActions.find((action) => action.type === type)?.label ?? type;
+}
+
 export function App() {
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
@@ -288,8 +336,11 @@ export function App() {
         eventType,
         text: eventText.trim(),
         structuredData: activeRun.snapshot
-          ? { runStepKey: currentRunStep?.key ?? null }
-          : undefined
+          ? {
+              action: eventType,
+              runStepKey: currentRunStep?.key ?? null
+            }
+          : { action: eventType }
       })
     });
 
@@ -447,32 +498,39 @@ export function App() {
                 it does not silently rewrite the recipe.
               </p>
 
-              <label>
-                Type
-                <select
-                  value={eventType}
-                  onChange={(event) => setEventType(event.target.value as CookRunEventType)}
-                >
-                  <option value="observation">Observation</option>
-                  <option value="substitution">Substitution</option>
-                  <option value="setting-change">Setting / prep change</option>
-                  <option value="intervention">Intervention</option>
-                  <option value="note">Note</option>
-                </select>
-              </label>
+              <div className="run-change-actions" role="group" aria-label="Record a Cook Run change">
+                {runChangeActions.map((action) => (
+                  <button
+                    key={action.type}
+                    type="button"
+                    className={eventType === action.type ? "change-action active" : "change-action"}
+                    aria-pressed={eventType === action.type}
+                    onClick={() => {
+                      setEventType(action.type);
+                      setEventText("");
+                    }}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
 
               <label>
-                Observation or change
+                {runChangeActions.find((action) => action.type === eventType)?.prompt ?? "What happened?"}
                 <textarea
+                  aria-label="Change details"
                   value={eventText}
                   onChange={(event) => setEventText(event.target.value)}
-                  placeholder="Example: I substituted half white onion and half red onion."
+                  placeholder={
+                    runChangeActions.find((action) => action.type === eventType)?.placeholder ??
+                    "Describe what changed."
+                  }
                   rows={3}
                 />
               </label>
 
               <button onClick={() => void addEvent()} disabled={!eventText.trim()}>
-                Record observation
+                Record {runChangeLabel(eventType).toLowerCase()}
               </button>
 
               {runEvents.length > 0 && (
@@ -480,7 +538,7 @@ export function App() {
                   <h3>Run notes</h3>
                   {runEvents.map((event) => (
                     <article key={event.id}>
-                      <span>{event.eventType}</span>
+                      <span>{runChangeLabel(event.eventType)}</span>
                       <p>{event.text}</p>
                     </article>
                   ))}
