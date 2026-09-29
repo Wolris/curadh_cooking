@@ -73,9 +73,30 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
   await expect(page.getByText(/POTS: soup can be a useful fluid\/sodium vehicle/)).toBeVisible();
   await expect(page.getByText(/MCAS: do not apply a universal avoid list/)).toBeVisible();
 
+  await expect(page.getByLabel("Carrot prep method")).toHaveValue("cuisinart");
+  await page.getByLabel("Carrot prep method").selectOption("knife");
+  await expect(page.getByText(/Planned prep: about 5 minutes/)).toBeVisible();
+
+  await page.getByLabel("Parsley form").selectOption("prepared");
+  await expect(page.getByText("2 tsp", { exact: true })).toBeVisible();
+  await expect(page.getByText(/commercial prepared product/)).toBeVisible();
+
+  const celeryRow = page.getByText("Celery", { exact: true }).locator("..").locator("..");
+  await celeryRow.getByRole("checkbox", { name: "Include" }).uncheck();
+
   await page.getByRole("button", { name: "Start Cook Run" }).click();
   await expect(page.getByText("Cook Mode")).toBeVisible();
+  await expect(page.getByText(/^Prep 1 of/)).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: /Put the chicken, carrots, onion, celery, parsley/ })
+    page.getByRole("heading", { name: /Peel the carrots, then chop them into large pieces with a knife/ })
   ).toBeVisible();
+
+  await page.getByRole("button", { name: "View Recipe" }).click();
+  await expect(page.getByText("Cook Run is still active")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Return to Cooking Run" })).toBeVisible();
+  await expect(page.getByText("2 tsp", { exact: true })).toBeVisible();
+  await expect(page.getByText("Celery", { exact: true })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Return to Cooking Run" }).click();
+  await expect(page.getByText("Cook Mode")).toBeVisible();
 });
