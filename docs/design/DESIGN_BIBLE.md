@@ -708,3 +708,23 @@ They may explain why a form or ingredient deserves attention, but they must not 
 ### Persistence errors are visible
 
 A Cook Run interaction that fails to save must show the user that it failed. Silent persistence failure is unacceptable.
+
+### Run notes are step-bound and correctable
+
+Every Cook Run note/deviation is associated with the exact generated run step where it was recorded, including generated Prep steps that do not correspond to a reusable recipe-step record.
+
+A saved run note can be:
+
+- edited;
+- reclassified to a different run-change type;
+- deleted.
+
+Editing or deleting a run note changes Cook Run evidence only. It does not rewrite the frozen Run plan or reusable Recipe.
+
+When editing a note from an earlier step, changing its type or wording must preserve its original step association unless the user explicitly moves it in a future interaction.
+
+### Step navigation remains reachable after note entry
+
+Because note entry shifts attention down the Cook Mode page, Previous / Next navigation should be repeated immediately after the run-note area.
+
+Finish Cook Run remains a separate action below ordinary step navigation so moving to the next step is less likely to be confused with ending the run.
