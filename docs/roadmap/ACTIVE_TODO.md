@@ -69,6 +69,12 @@ Branch:
 8. **Complete structured live-change interaction.**
    - preserve quick actions: Observation, Substitute, Skip, Add, Amount, Setting / prep;
    - freeform detail remains available;
+   - every run note/change is tied to the exact generated run step where it was recorded, including Prep steps;
+   - allow an existing run note/change to be **edited**, including changing its type;
+   - allow an existing run note/change to be **deleted**;
+   - editing/deleting changes Cook Run evidence only and never rewrites the frozen Recipe snapshot;
+   - duplicate Previous / Next navigation immediately after the run-note area so the likely next action is available where attention already is;
+   - keep Finish Cook Run visually and behaviorally distinct from ordinary step progression;
    - ingredient pickers/quantity structure may be added only where they lower cooking friction;
    - no generalized automatic mid-run replanning yet.
 
