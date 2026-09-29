@@ -80,6 +80,80 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
         expect.objectContaining({ label: "Salt balance" })
       ])
     );
+    expect(recipe.variant.configuration.choices).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: "parsley.form", kind: "select" }),
+        expect.objectContaining({ key: "carrots.peel", kind: "toggle" }),
+        expect.objectContaining({ key: "carrots.prep", kind: "select" })
+      ])
+    );
+  });
+
+  it("freezes configured soup choices into a prep-first Cook Run snapshot", async () => {
+    app = buildServer({ dbPath: ":memory:" });
+
+    const detail = await app.inject({
+      method: "GET",
+      url: "/api/recipes/homemade-chicken-soup"
+    });
+    const recipe = detail.json();
+
+    const started = await app.inject({
+      method: "POST",
+      url: "/api/cook-runs",
+      payload: {
+        recipeId: recipe.id,
+        variantId: recipe.variant.id,
+        selections: {
+          "yellow-onion.include": false,
+          "celery.include": false,
+          "parsley.include": true,
+          "parsley.form": "prepared",
+          "carrots.peel": false,
+          "carrots.prep": "knife"
+        }
+      }
+    });
+
+    expect(started.statusCode).toBe(201);
+    const run = started.json();
+    expect(run.snapshot.estimatedPrepMinutes).toBe(5);
+    expect(run.snapshot.selections["yellow-onion.include"]).toBe(false);
+    expect(run.snapshot.configuredIngredients).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: "yellow-onion" })])
+    );
+    expect(run.snapshot.configuredIngredients).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: "celery" })])
+    );
+    expect(run.snapshot.configuredIngredients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "parsley",
+          quantity: "2 tsp",
+          form: "prepared or pre-chopped"
+        })
+      ])
+    );
+    expect(run.snapshot.steps[0]).toEqual(
+      expect.objectContaining({
+        stage: "prep",
+        instruction: expect.stringContaining("Scrub the carrots")
+      })
+    );
+
+    const firstCookStep = run.snapshot.steps.find(
+      (step: { key: string }) => step.key === "cook-1"
+    );
+    expect(firstCookStep.instruction).not.toContain("onion");
+    expect(firstCookStep.instruction).not.toContain("celery");
+    expect(firstCookStep.instruction).toContain("parsley");
+
+    const fetched = await app.inject({
+      method: "GET",
+      url: `/api/cook-runs/${run.id}`
+    });
+    expect(fetched.statusCode).toBe(200);
+    expect(fetched.json().snapshot).toEqual(run.snapshot);
   });
 
   it("persists a Cook Run event and independent result markers", async () => {
