@@ -6,6 +6,93 @@ export type CuradhDb = InstanceType<typeof Database>;
 
 const now = () => new Date().toISOString();
 
+const recipe0002Configuration = {
+  version: 1,
+  choices: [
+    {
+      key: "yellow-onion.include",
+      kind: "toggle",
+      label: "Yellow onion",
+      ingredientId: "yellow-onion",
+      defaultValue: true,
+      advisory: "Optional for this soup. Omit it if it does not fit the selected profile or current tolerance."
+    },
+    {
+      key: "celery.include",
+      kind: "toggle",
+      label: "Celery",
+      ingredientId: "celery",
+      defaultValue: true,
+      advisory: "Optional for this soup. Omit it if it does not fit the selected profile or current tolerance."
+    },
+    {
+      key: "parsley.include",
+      kind: "toggle",
+      label: "Parsley",
+      ingredientId: "parsley",
+      defaultValue: true,
+      advisory: "Optional for this soup. Omit it if it does not fit the selected profile or current tolerance."
+    },
+    {
+      key: "parsley.form",
+      kind: "select",
+      label: "Parsley form",
+      ingredientId: "parsley",
+      defaultValue: "fresh",
+      options: [
+        {
+          value: "fresh",
+          label: "Fresh parsley",
+          quantity: "8 to 10 sprigs",
+          form: null
+        },
+        {
+          value: "prepared",
+          label: "Prepared / pre-chopped parsley",
+          quantity: "2 tsp",
+          form: "prepared or pre-chopped",
+          advisory: "If using a commercial prepared product, check its ingredient list, sodium, additives, and freshness against the selected profile."
+        }
+      ]
+    },
+    {
+      key: "carrots.peel",
+      kind: "toggle",
+      label: "Peel carrots",
+      ingredientId: "carrots",
+      defaultValue: true
+    },
+    {
+      key: "carrots.prep",
+      kind: "select",
+      label: "Carrot prep method",
+      ingredientId: "carrots",
+      defaultValue: "cuisinart",
+      options: [
+        {
+          value: "cuisinart",
+          label: "Cuisinart / food processor",
+          activeMinutes: 2
+        },
+        {
+          value: "knife",
+          label: "Knife",
+          activeMinutes: 5
+        }
+      ]
+    }
+  ]
+};
+
+function ensureRecipe0002Configuration(db: CuradhDb) {
+  db.prepare(`
+    UPDATE recipe_variants
+    SET configuration_json = ?
+    WHERE id = 'recipe-0002-v1'
+  `).run(JSON.stringify(recipe0002Configuration));
+}
+
+
 function runMigrations(db: CuradhDb) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -335,5 +422,6 @@ export function openDatabase(dbPath = process.env.CURADH_DB_PATH ?? path.resolve
   runMigrations(db);
   seedRecipe0001(db);
   seedRecipe0002(db);
+  ensureRecipe0002Configuration(db);
   return db;
 }
