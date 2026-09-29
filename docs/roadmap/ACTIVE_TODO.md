@@ -2,101 +2,112 @@
 
 ## Current phase
 
-**MVP implementation — first end-to-end Recipe/Cook Run slice.**
+**MVP implementation — recipe library + Cook Run evidence.**
 
 ## CURRENT EXECUTION LOCK
 
-**AWAITING OWNER/BROWSER VALIDATION — Production scaffold + Recipe 0001 Cook Run vertical slice.**
+**AWAITING AUTOMATED + OWNER KITCHEN VALIDATION — Recipe 0002 Homemade Chicken Soup.**
 
-PR:
+Branch:
 
-- #1 — `Establish Curadh Cooking MVP and Recipe 0001 Cook Run flow`
-- branch: `feature/recipe-0001-v1`
+- `feature/recipe-0002-chicken-soup`
+- stacked on `feature/recipe-0001-v1` because Recipe/Cook Run scaffolding is still in PR #1
 
-### Implemented flow
+### Recipe 0002 scope
 
-**Recipe library -> Oatmeal Sandwich Bread -> Start Cook Run -> Cook Mode -> record observation/deviation -> finish -> result markers -> saved Recipe history.**
+Add the user-supplied Homemade Chicken Soup as a **Draft** recipe and adapt it for:
 
-Implemented architecture:
+- Instant Pot pressure cooking;
+- Cuisinart blender / food processor carrot puree;
+- instant-read thermometer verification;
+- profile-first POTS / MCAS notes rather than a universal safe/unsafe label.
 
-- React + Vite + TypeScript web client;
-- Node + Fastify + TypeScript API;
-- SQLite runtime persistence;
-- version-controlled SQL migrations;
-- shared Zod contracts;
-- modular monolith;
-- no external AI dependency for the first usable Cook Mode.
+Source recipe facts preserved:
 
-### Automated validation
+- chicken parts are the broth base;
+- carrots are cooked with the chicken;
+- onion, celery, and parsley are aromatics;
+- soup is strained and surface fat may be skimmed;
+- cooked carrots are pureed back into the broth.
 
-Latest CI branch validation before the local-validator update: **PASS**
+The Curadh Cooking adaptation uses an original pressure-cooker method rather than copying the source wording.
 
-- TypeScript typecheck — PASS
-- API/domain tests — PASS
-- production build — PASS
-- Playwright browser vertical flow — PASS
+### POTS / MCAS fact-check
 
-Latest owner-local full validation: **BLOCKED BY PLAYWRIGHT DEV-SERVER STARTUP**
+Current evidence summary:
 
-- pull/install/typecheck/test/build — PASS
-- Playwright Chromium install — PASS
-- Playwright timed out waiting for its configured local web servers before the E2E test started
-- normal manual development uses web 5174 + API 3101
-- automated E2E is now isolated on dedicated web 5274 + API 3102
-- E2E ports are non-reusable so a true collision fails explicitly instead of silently attaching to another project
-- port 3001 was confirmed to belong to another local service (`GET /api/health` returned 404)
-- normal Curadh API default moved to 3101; owner-local browser review should use 5174 -> 3101
-- owner-local rerun required
+- POTS care often uses increased oral fluid and sodium when clinically appropriate; one universal sodium dose is not correct for every person.
+- MCAS does not have one evidence-based universal food-avoid list; individual triggers and profile overrides matter.
+- Histamine already present in food is heat-stable; pressure cooking is not a histamine-destruction claim.
+- Freshness/storage can matter for biogenic amines; prompt cooling/freezing remains relevant.
+- Poultry must reach at least 165°F / 74°C and leftovers should be chilled promptly.
 
-The browser automation proves:
+The recipe record preserves reviewed source links and uncertainty.
 
-- Recipe 0001 loads;
-- proven White / Light / 1.5 lb settings render;
-- a Cook Run can start;
-- a live observation can be recorded and persisted;
-- result markers save independently;
-- `Height / rise = mixed` can coexist with `Flavor = hit`;
-- the completed run appears in Recipe history.
+### Implemented Recipe 0002 draft
 
-### Local validation entrypoint
+Initial validation batch:
 
-Windows validation now mirrors the established Mundane Adventures workflow:
+- 2 1/2 to 3 lb bone-in chicken thighs/drumsticks;
+- 6 to 8 carrots;
+- optional onion/celery/parsley according to profile;
+- 4 to 6 cups water, never exceeding the pressure-cook fill limit;
+- 2 tsp salt to start, adjusted after cooking according to taste/profile.
 
-- `validate.cmd` — full pull/install/typecheck/test/build/browser validation;
-- `validate.cmd quick` — typecheck/test/build without pull/install/browser;
-- `validate.cmd browser` — ensures Playwright Chromium is installed, then runs browser validation;
-- `validate.cmd -Branch <name>` — fetch/switch/pull the requested branch before validating;
-- archived logs live under ignored `validation-logs/`, with `latest.txt` as the handoff/debug artifact;
-- `package-lock.json` is ignored while this scaffold intentionally uses `npm install --no-package-lock`;
-- the validator reports start/end branch + commit, working-tree state, individual step results, and preserves failure exit codes.
+Equipment/settings:
 
-### Owner/browser validation requested
+- Instant Pot Pressure Cook / Manual;
+- High pressure;
+- 20 minutes;
+- 15-minute natural release, then vent remaining pressure;
+- Cuisinart carrot puree starts with 1 cup broth;
+- chicken verified at 165°F / 74°C minimum.
 
-Review the current functional scaffolding, not final visual design.
+Result markers:
 
-1. Home communicates a goal-first starting point and exposes Oatmeal Sandwich Bread.
-2. Recipe detail foregrounds useful cooking facts, proven settings, known successes, and the height improvement opportunity without lifestyle-blog filler.
-3. Start Cook Run enters a clear step-oriented Cook Mode.
-4. Record a live observation/deviation and verify it appears in the run notes.
-5. Finish the run and record independent results — especially one successful marker and one mixed marker.
-6. Save results and verify the completed run appears in Recent Cook Runs.
-7. Report whether this interaction model feels like the right foundation for the eventual goal + ingredients + profile + tools + time experience.
+- broth flavor;
+- carrot body / texture;
+- chicken tenderness;
+- salt balance;
+- aromatic balance;
+- overall soup usefulness.
 
-### Merge gate
+### Automated validation target
 
-Do not merge PR #1 until Jim approves the browser/experience review.
+- API lists both Recipe 0001 and Recipe 0002;
+- Recipe 0002 loads as Draft;
+- Instant Pot, Cuisinart, and thermometer settings render correctly;
+- browser recipe detail exposes the pressure time, release, Cuisinart guidance, and profile-first POTS/MCAS note;
+- existing Recipe 0001 Cook Run flow remains green.
+
+### Owner kitchen validation requested
+
+Cook Recipe 0002 as written, then report:
+
+1. **Broth flavor** — hit / mixed / miss
+2. **Carrot body / texture** — hit / mixed / miss
+3. **Chicken tenderness** — hit / mixed / miss
+4. **Salt balance** — hit / mixed / miss
+5. **Aromatic balance** — hit / mixed / miss
+6. **Overall soup usefulness** — hit / mixed / miss
+
+Also report any deviation that matters:
+
+- actual chicken weight;
+- actual water amount;
+- any omitted aromatic;
+- salt added after cooking;
+- pressure/release change;
+- Cuisinart puree adjustment;
+- profile-specific tolerance observation.
+
+Do **not** promote Recipe 0002 from Draft to Tested until an actual Cook Run is reported.
+
+## Dependency / existing merge gate
+
+PR #1 — `Establish Curadh Cooking MVP and Recipe 0001 Cook Run flow` — remains unmerged and still requires Jim's browser/experience approval before merge.
 
 ## Recently closed
-
-### Initial MVP architecture — ACCEPTED
-
-- TypeScript modular monolith;
-- React/Vite client;
-- Fastify REST API;
-- SQLite + migrations;
-- shared Zod contracts;
-- first domain model derived from Recipe 0001;
-- contextual reasoning preserved as a future seam rather than an MVP dependency.
 
 ### Recipe 0001 — Oatmeal Sandwich Bread — CANONICAL / SUCCESS
 
