@@ -36,6 +36,7 @@ $presets = @{
         "npm run typecheck",
         "npm run test",
         "npm run build",
+        "npx playwright install chromium",
         "npm run test:e2e"
     )
     quick = @(
@@ -44,6 +45,7 @@ $presets = @{
         "npm run build"
     )
     browser = @(
+        "npx playwright install chromium",
         "npm run test:e2e"
     )
     test = @(
@@ -67,9 +69,9 @@ function Show-Usage {
     Write-Host "Curadh Cooking validation"
     Write-Host ""
     Write-Host "Usage:"
-    Write-Host "  .\validate.cmd                 Full validation (pull/install/typecheck/test/build/browser)"
+    Write-Host "  .\validate.cmd                 Full validation (pull/install/typecheck/test/build/install-browser/e2e)"
     Write-Host "  .\validate.cmd quick           Typecheck/test/build without pull, install, or browser"
-    Write-Host "  .\validate.cmd browser         Playwright browser validation only"
+    Write-Host "  .\validate.cmd browser         Ensure Chromium + run Playwright browser validation"
     Write-Host "  .\validate.cmd test            API/domain tests only"
     Write-Host "  .\validate.cmd build           Production build only"
     Write-Host "  .\validate.cmd typecheck       TypeScript typecheck only"
