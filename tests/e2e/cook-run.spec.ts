@@ -46,3 +46,20 @@ test("Recipe 0001 can create a Cook Run, record reality, and save independent re
   await expect(page.getByText("Height / rise: mixed").first()).toBeVisible();
   await expect(page.getByText("Flavor: hit").first()).toBeVisible();
 });
+
+
+test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: /Homemade Chicken Soup/ }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Homemade Chicken Soup" })
+  ).toBeVisible();
+  await expect(page.getByText("20 minutes", { exact: true })).toBeVisible();
+  await expect(page.getByText(/15 minutes natural/)).toBeVisible();
+  await expect(page.getByText(/Cuisinart/)).toBeVisible();
+  await expect(page.getByText("165°F / 74°C", { exact: true })).toBeVisible();
+  await expect(page.getByText(/POTS: soup can be a useful fluid\/sodium vehicle/)).toBeVisible();
+  await expect(page.getByText(/MCAS: do not apply a universal avoid list/)).toBeVisible();
+});
