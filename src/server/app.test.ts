@@ -206,6 +206,39 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
     );
   });
 
+  it("rejects a Cook Run note that is not tied to a step in that run", async () => {
+    app = buildServer({ dbPath: ":memory:" });
+
+    const detailResponse = await app.inject({
+      method: "GET",
+      url: "/api/recipes/homemade-chicken-soup"
+    });
+    const recipe = detailResponse.json();
+
+    const started = await app.inject({
+      method: "POST",
+      url: "/api/cook-runs",
+      payload: {
+        recipeId: recipe.id,
+        variantId: recipe.variant.id
+      }
+    });
+    const run = started.json();
+
+    const event = await app.inject({
+      method: "POST",
+      url: `/api/cook-runs/${run.id}/events`,
+      payload: {
+        runStepKey: "prep-not-in-this-run",
+        eventType: "observation",
+        text: "This should not save."
+      }
+    });
+
+    expect(event.statusCode).toBe(400);
+    expect(event.json().error).toContain("does not belong");
+  });
+
   it("edits type/text in place and deletes a step-bound Cook Run note", async () => {
     app = buildServer({ dbPath: ":memory:" });
 
