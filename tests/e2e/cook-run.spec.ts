@@ -98,6 +98,26 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
 
   await page.getByRole("button", { name: "Return to Cooking Run" }).click();
   await expect(page.getByText("Cook Mode")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next step" })).toHaveCount(2);
+
+  await page.getByRole("button", { name: "Setting / prep", exact: true }).click();
+  await page.getByLabel("Change details").fill("I added 1 tsp Garlic Powder");
+  await page.getByRole("button", { name: "Record setting / prep" }).click();
+
+  const runNotes = page.getByLabel("Cook Run observations");
+  await expect(runNotes.getByText("I added 1 tsp Garlic Powder")).toBeVisible();
+  await expect(runNotes.getByText("Prep 1", { exact: true })).toBeVisible();
+
+  await runNotes.getByRole("button", { name: "Edit" }).click();
+  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await expect(page.getByLabel("Change details")).toHaveValue("I added 1 tsp Garlic Powder");
+  await page.getByRole("button", { name: "Save note changes" }).click();
+
+  await expect(runNotes.getByText("Add", { exact: true })).toBeVisible();
+  await expect(runNotes.getByText("Prep 1", { exact: true })).toBeVisible();
+
+  await runNotes.getByRole("button", { name: "Delete" }).click();
+  await expect(runNotes.getByText("I added 1 tsp Garlic Powder")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Substitute", exact: true }).click();
   await expect(page.getByLabel("Change details")).toHaveAttribute(
