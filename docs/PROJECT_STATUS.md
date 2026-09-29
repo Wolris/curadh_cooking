@@ -67,7 +67,13 @@ Cook Mode is a core product direction. MVP should first support structured recip
 
 ## Current execution lock
 
-Implement the first end-to-end Recipe/Cook Run vertical slice: Recipe library -> Oatmeal Sandwich Bread -> Start Cook Run -> Cook Mode -> observation/deviation -> result markers -> saved run history.
+Implement the Recipe 0002 site-review findings as the next MVP foundation:
+
+**configurable Recipe -> frozen Cook Run snapshot -> prep-first Cook Mode -> structured live deviations.**
+
+The first proving case is Homemade Chicken Soup. Recipe 0002 remains Draft; kitchen validation resumes only after the configure/prep/run experience is ready for owner browser review.
+
+Canonical design detail is in Design Bible §12 and the ordered slices are in `docs/roadmap/ACTIVE_TODO.md`.
 
 ## Repository visibility
 
