@@ -137,11 +137,21 @@ Automated coverage proves:
 - direct Cook-step jump synchronizes the run position;
 - Recipe 0001 remains green.
 
+Completed Cook Run correction interface implemented and validated:
+
+- Recent Cook Runs now exposes **Edit run**;
+- completed runs stay completed and retain their original completion timestamp;
+- frozen run plan is shown read-only;
+- step-bound notes can be added after submission, edited, reclassified, or deleted;
+- submitted result-marker outcomes and notes can be corrected;
+- corrections update Cook Run evidence only and do not rewrite the frozen Recipe snapshot;
+- automated browser coverage proves the submitted-run editor path end to end.
+
 Next gate under this same lock:
 
-- owner browser review of desktop and mobile/kitchen-scale behavior;
+- owner browser review of desktop and mobile/kitchen-scale behavior, including editing the already-submitted soup run;
 - reconcile owner findings;
-- only then resume Recipe 0002 kitchen validation.
+- only then resume Recipe 0002 evidence/status reconciliation.
 
 ### Supporting UX owner
 
