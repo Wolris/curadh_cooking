@@ -90,6 +90,10 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
     page.getByRole("heading", { name: /Peel the carrots, then chop them into large pieces with a knife/ })
   ).toBeVisible();
 
+  const recipeContext = page.getByLabel("Recipe context");
+  await expect(recipeContext.getByRole("heading", { name: "Prep ingredients" })).toBeVisible();
+  await expect(recipeContext.getByRole("button", { name: /Carrots/ })).toHaveClass(/current/);
+
   await page.getByRole("button", { name: "View Recipe" }).click();
   await expect(page.getByText("Cook Run is still active")).toBeVisible();
   await expect(page.getByRole("button", { name: "Return to Cooking Run" })).toBeVisible();
@@ -132,4 +136,28 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
   await expect(
     page.getByText("Used 1/2 white onion + 1/2 red onion instead of 1 yellow onion.")
   ).toBeVisible();
+
+  await page.getByRole("button", { name: "Next step" }).first().click();
+  await expect(page.getByText(/^Prep 2 of/)).toBeVisible();
+  await expect(recipeContext.getByRole("button", { name: /Carrots/ })).toHaveClass(/completed/);
+  await expect(recipeContext.getByRole("button", { name: /Yellow onion/ })).toHaveClass(/current/);
+
+  await page.reload();
+  await expect(page.getByText("Cook Mode")).toBeVisible();
+  await expect(page.getByText(/^Prep 2 of/)).toBeVisible();
+  await expect(
+    page.getByText("Used 1/2 white onion + 1/2 red onion instead of 1 yellow onion.")
+  ).toBeVisible();
+  await expect(page.getByLabel("Recipe context").getByRole("button", { name: /Carrots/ }))
+    .toHaveClass(/completed/);
+
+  await page.getByRole("button", { name: "Next step" }).first().click();
+  await expect(page.getByText(/^Prep 3 of/)).toBeVisible();
+  await page.getByRole("button", { name: "Next step" }).first().click();
+  await expect(page.getByText(/^Cook 1 of/)).toBeVisible();
+
+  const cookContext = page.getByLabel("Recipe context");
+  await expect(cookContext.getByRole("heading", { name: "Cooking steps" })).toBeVisible();
+  await cookContext.getByRole("button", { name: /Step 2/ }).click();
+  await expect(page.getByText(/^Cook 2 of/)).toBeVisible();
 });
