@@ -36,9 +36,16 @@ export const updateCookRunSchema = z.object({
 
 export const createCookRunEventSchema = z.object({
   stepId: z.string().min(1).nullable().optional(),
+  runStepKey: z.string().min(1),
   eventType: cookRunEventTypeSchema,
   text: z.string().trim().min(1),
   structuredData: z.record(z.string(), z.unknown()).optional()
+});
+
+export const updateCookRunEventSchema = z.object({
+  eventType: cookRunEventTypeSchema,
+  text: z.string().trim().min(1),
+  runStepKey: z.string().min(1)
 });
 
 export const completeCookRunSchema = z.object({
