@@ -1,0 +1,30 @@
+name: Validate
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck, unit/API tests, and production build
+        run: npm run validate
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser vertical slice
+        run: npm run test:e2e
