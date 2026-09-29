@@ -81,8 +81,7 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
   await expect(page.getByText("2 tsp", { exact: true })).toBeVisible();
   await expect(page.getByText(/commercial prepared product/)).toBeVisible();
 
-  const celeryRow = page.getByText("Celery", { exact: true }).locator("..").locator("..");
-  await celeryRow.getByRole("checkbox", { name: "Include" }).uncheck();
+  await page.getByLabel("Celery include").uncheck();
 
   await page.getByRole("button", { name: "Start Cook Run" }).click();
   await expect(page.getByText("Cook Mode")).toBeVisible();
