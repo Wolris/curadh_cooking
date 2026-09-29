@@ -85,11 +85,18 @@ Implemented and automated:
 
 Full TypeScript/API/build/browser validation passes on the combined implementation.
 
+Completed-run correction is now implemented and fully validated:
+
+- Recent Cook Runs -> Edit run;
+- correct/add/delete step-bound notes after submission;
+- revise submitted result markers;
+- preserve completed status, timestamps, and frozen run plan.
+
 Next gate:
 
-- Jim desktop + mobile/kitchen-scale browser review;
+- Jim desktop + mobile/kitchen-scale browser review, including correction of the already-submitted soup run;
 - reconcile review findings;
-- then resume Recipe 0002 kitchen validation.
+- then resume Recipe 0002 evidence/status reconciliation.
 
 Canonical design detail is in Design Bible §§12–14 and `docs/design/COOK_RUN_UX_DEFINITION.md`.
 
