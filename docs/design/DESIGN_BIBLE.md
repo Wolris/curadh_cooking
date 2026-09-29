@@ -587,3 +587,70 @@ At review/completion, the product may surface these deviations as candidates for
 Simple icons for common tools/actions/ingredients are an accepted future interface layer, including examples such as knife, peeler, food processor/Cuisinart, Instant Pot, conventional pot, boiling water, and frequently used ingredients.
 
 Icons reinforce scanability; they do not replace text instructions or become a dependency for the underlying structured model.
+
+
+## 13. Configurable Recipe / Cook Run interaction model
+
+The structured product model is now sufficiently defined to support focused interaction design before additional UI development.
+
+The supporting task flow, state matrix, low-fidelity screen/state map, risks, and owner-review questions live in `docs/design/COOK_RUN_UX_DEFINITION.md`.
+
+### Canonical state model
+
+The interface must keep these three states conceptually distinct:
+
+1. **Recipe default** — the reusable authored recipe and its supported choices.
+2. **Run plan** — the frozen configured snapshot created when Start Cook Run is selected.
+3. **Run reality** — deviations and observations recorded after cooking begins.
+
+Before Start Cook Run, supported choices configure the intended run. After Start Cook Run, changes are recorded as run evidence rather than silently changing the frozen plan or reusable Recipe.
+
+### Interaction hierarchy
+
+Recipe configuration should feel like part of reading the recipe, not a separate settings form.
+
+- Controls live beside the ingredient or preparation decision they affect.
+- Only meaningful authored choices receive controls.
+- The visible ingredient presentation updates to reflect selected form, quantity, inclusion state, and relevant prep.
+- Optional ingredients remain visible and reversible before the run begins.
+- Ingredients that are not safely/authored as optional should not receive an omission control merely because the system can record a later skip.
+
+Cook Mode prioritizes the current instruction, orientation, and forward progress. Recording reality is secondary but immediately reachable.
+
+### Structured run changes
+
+The intended structured change set is:
+
+- substitute ingredient;
+- skip ingredient;
+- add ingredient;
+- change amount;
+- change setting/preparation;
+- record an observation.
+
+Freeform notes remain available as a fallback.
+
+An authored Recipe alternative is different from an ad-hoc Cook Run substitution. Run changes do not become Recipe alternatives without a later explicit promotion decision.
+
+### Current MVP boundary
+
+The MVP should faithfully record mid-run changes but does not promise automatic live replanning of all future instructions after an ad-hoc substitution.
+
+Supported authored alternatives can generate the correct plan before Start Cook Run. Generalized live replanning is a later capability requiring explicit dependency rules.
+
+### Kitchen usability
+
+Mobile/kitchen use is a validation requirement before visual polish.
+
+The interaction should assume:
+
+- divided attention;
+- wet or dirty hands;
+- small screens;
+- interruptions;
+- a need for large touch targets;
+- minimal typing for common changes;
+- persistent stage/step orientation;
+- reliable re-entry into an active run.
+
+Icons may improve scanning later, but text labels remain the primary semantic layer until the interaction hierarchy is proven.
