@@ -80,12 +80,16 @@ If implementation convenience conflicts with an accepted product principle, surf
 
 ## 7. Data/model discipline
 
-- Keep `Profile`, `Mapping`, `Ingredient`, `Recipe`, and recipe/profile fit as distinct concepts.
+- Keep `Profile`, `Mapping`, `Ingredient`, `Recipe`, `Variant`, `Cook Run`, `Result evidence`, and recipe/profile fit as distinct concepts.
+- A Recipe is the repeatable formula/instructions; a Cook Run is one actual execution. Do not overwrite one with the other.
+- Canonical means current proven/recommended recipe, not perfected forever. Known improvement opportunities may coexist with Canonical status.
+- A Variant is an intentional experiment/change and does not replace the canonical Recipe until evidence supports promotion.
+- Preserve partial historical evidence without inventing missing recipe details.
 - Named mappings provide defaults; explicit profile overrides take precedence.
-- Do not reduce all sensitivities to a single hidden score.
+- Do not reduce all sensitivities or cooking results to a single hidden score.
 - Keep provenance/confidence available wherever a rule came from outside direct user preference.
 - Do not infer a person's medical status from their food choices.
-- Do not add AI services, external nutrition APIs, scraping infrastructure, accounts, or public sharing until a real requirement and architecture decision justify them.
+- Do not add external AI services, nutrition APIs, scraping infrastructure, accounts, or public sharing until a real requirement and architecture decision justify them.
 
 ## 8. Engineering style
 
