@@ -599,11 +599,22 @@ export function App() {
   }
 
   if (activeRun && !viewingRecipeDuringRun) {
-    const prepCount = runSteps.filter((step) => step.stage === "prep").length;
-    const cookCount = runSteps.filter((step) => step.stage === "cook").length;
+    const prepSteps = runSteps.filter((step) => step.stage === "prep");
+    const cookSteps = runSteps.filter((step) => step.stage === "cook");
+    const prepCount = prepSteps.length;
+    const cookCount = cookSteps.length;
     const sameStageSteps = runSteps.filter((step) => step.stage === currentRunStep?.stage);
     const stageIndex = sameStageSteps.findIndex((step) => step.key === currentRunStep?.key) + 1;
     const stageTotal = currentRunStep?.stage === "prep" ? prepCount : cookCount;
+    const completedStepKeys = new Set(activeRun.completedStepKeys ?? []);
+    const fallbackPrepIngredientIds: Record<string, string> = {
+      "prep-carrots": "carrots",
+      "prep-onion": "yellow-onion",
+      "prep-celery": "celery",
+      "prep-parsley": "parsley"
+    };
+    const excerpt = (instruction: string) =>
+      instruction.length > 86 ? `${instruction.slice(0, 83)}…` : instruction;
 
     return (
       <main className="shell cook-shell">
@@ -621,7 +632,8 @@ export function App() {
         {error && <p className="error" role="alert">{error}</p>}
 
         {!finishing ? (
-          <>
+          <div className="cook-layout">
+            <div className="cook-main">
             <section className="cook-stage" aria-labelledby="current-step">
               <p className="step-count">
                 {currentRunStep?.stage === "prep" ? "Prep" : "Cook"} {stageIndex} of {stageTotal}
@@ -639,7 +651,7 @@ export function App() {
                 </button>
                 <button
                   disabled={currentStepIndex === runSteps.length - 1}
-                  onClick={() => void moveStep(currentStepIndex + 1)}
+                  onClick={() => void advanceStep()}
                 >
                   Next step
                 </button>
@@ -748,7 +760,92 @@ export function App() {
             <button className="finish-button" onClick={() => setFinishing(true)}>
               Finish Cook Run
             </button>
-          </>
+            </div>
+
+            <aside className="panel cook-context" aria-label="Recipe context">
+              <p className="eyebrow">Recipe progress</p>
+              {currentRunStep?.stage === "prep" ? (
+                <>
+                  <h2>Prep ingredients</h2>
+                  <ol className="run-outline prep-outline">
+                    {prepSteps.map((step, index) => {
+                      const globalIndex = runSteps.findIndex((item) => item.key === step.key);
+                      const ingredientId =
+                        step.ingredientId ?? fallbackPrepIngredientIds[step.key];
+                      const ingredient = activeRun.snapshot?.configuredIngredients.find(
+                        (item) => item.id === ingredientId
+                      );
+                      const label =
+                        step.label ??
+                        ingredient?.name ??
+                        step.key.replace(/^prep-/, "").replace(/-/g, " ");
+                      const current = step.key === currentRunStep.key;
+                      const completed = completedStepKeys.has(step.key);
+
+                      return (
+                        <li key={step.key}>
+                          <button
+                            type="button"
+                            className={[
+                              "outline-step",
+                              current ? "current" : "",
+                              completed ? "completed" : ""
+                            ].filter(Boolean).join(" ")}
+                            aria-current={current ? "step" : undefined}
+                            onClick={() => void moveStep(globalIndex)}
+                          >
+                            <span className="outline-marker">{completed ? "✓" : index + 1}</span>
+                            <span className="outline-copy">
+                              <strong>{label}</strong>
+                              {ingredient && (
+                                <small>
+                                  {ingredient.quantity}
+                                  {ingredient.form ? ` · ${ingredient.form}` : ""}
+                                </small>
+                              )}
+                              {current && <small>{step.instruction}</small>}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </>
+              ) : (
+                <>
+                  <h2>Cooking steps</h2>
+                  <ol className="run-outline cook-outline">
+                    {cookSteps.map((step, index) => {
+                      const globalIndex = runSteps.findIndex((item) => item.key === step.key);
+                      const current = step.key === currentRunStep?.key;
+                      const completed = completedStepKeys.has(step.key);
+
+                      return (
+                        <li key={step.key}>
+                          <button
+                            type="button"
+                            className={[
+                              "outline-step",
+                              current ? "current" : "",
+                              completed ? "completed" : ""
+                            ].filter(Boolean).join(" ")}
+                            aria-current={current ? "step" : undefined}
+                            onClick={() => void moveStep(globalIndex)}
+                          >
+                            <span className="outline-marker">{completed ? "✓" : index + 1}</span>
+                            <span className="outline-copy">
+                              <strong>Step {index + 1}</strong>
+                              <small>{current ? step.instruction : excerpt(step.instruction)}</small>
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </>
+              )}
+            </aside>
+          </div>
         ) : (
           <section className="panel results-panel" aria-labelledby="result-check">
             <p className="eyebrow">Compare with the goal</p>
