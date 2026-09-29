@@ -29,12 +29,19 @@ Implemented architecture:
 
 ### Automated validation
 
-Latest branch validation: **PASS**
+Latest CI branch validation before the local-validator update: **PASS**
 
 - TypeScript typecheck — PASS
 - API/domain tests — PASS
 - production build — PASS
 - Playwright browser vertical flow — PASS
+
+Latest owner-local full validation: **BLOCKED BY LOCAL PLAYWRIGHT BROWSER INSTALLATION**
+
+- pull/install/typecheck/test/build — PASS
+- Playwright execution — did not start because Chromium was not installed locally
+- validator updated so full and `browser` modes run `npx playwright install chromium` before the E2E gate
+- owner rerun required
 
 The browser automation proves:
 
@@ -52,9 +59,10 @@ Windows validation now mirrors the established Mundane Adventures workflow:
 
 - `validate.cmd` — full pull/install/typecheck/test/build/browser validation;
 - `validate.cmd quick` — typecheck/test/build without pull/install/browser;
-- `validate.cmd browser` — Playwright browser validation only;
+- `validate.cmd browser` — ensures Playwright Chromium is installed, then runs browser validation;
 - `validate.cmd -Branch <name>` — fetch/switch/pull the requested branch before validating;
 - archived logs live under ignored `validation-logs/`, with `latest.txt` as the handoff/debug artifact;
+- `package-lock.json` is ignored while this scaffold intentionally uses `npm install --no-package-lock`;
 - the validator reports start/end branch + commit, working-tree state, individual step results, and preserves failure exit codes.
 
 ### Owner/browser validation requested
