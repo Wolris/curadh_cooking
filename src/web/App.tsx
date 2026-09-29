@@ -446,6 +446,7 @@ export function App() {
     setRecipe(detail);
     setSelections(defaultsFor(detail.variant.configuration));
     setActiveRun(null);
+    setCompletedRunEdit(null);
     setViewingRecipeDuringRun(false);
     setRunEvents([]);
     setCurrentStepIndex(0);
@@ -643,6 +644,7 @@ export function App() {
   function goHome() {
     setRecipe(null);
     setActiveRun(null);
+    setCompletedRunEdit(null);
     setViewingRecipeDuringRun(false);
     setRunEvents([]);
     setFinishing(false);
