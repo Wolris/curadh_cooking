@@ -226,6 +226,22 @@ Initial recipe statuses:
 
 Canonical does not mean perfected. A canonical recipe may retain known improvement opportunities and may later be replaced by a better proven variant.
 
+### Draft-first site workflow
+
+A new or materially adapted recipe should enter the site as **Draft** before kitchen validation.
+
+Draft is not a hidden authoring state. A Draft recipe should be fully viewable and cookable through the normal recipe-detail and Cook Mode flow so the site itself can be used to verify that the recipe tells the complete cooking story:
+
+1. save the proposed formula/method as Draft;
+2. review the Draft in the site for missing quantities, tools, settings, sequence, cues, profile notes, and validation targets;
+3. start a Cook Run from that Draft;
+4. record deviations/observations while cooking;
+5. complete the planned result markers;
+6. promote to **Tested** only after an actual documented kitchen run;
+7. promote to **Canonical** only when Jim explicitly approves it as the current proven/recommended version.
+
+A successful Cook Run does not silently promote status. Status changes are explicit lifecycle decisions.
+
 Cook Runs retain their own evidence even after the canonical Recipe changes.
 
 ## 5. Core experience journey
