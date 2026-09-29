@@ -4,13 +4,20 @@
 
 **MVP implementation — first end-to-end Recipe/Cook Run slice.**
 
-Product-definition and initial architecture are now sufficiently grounded by Recipe 0001 to begin implementation.
-
 ## CURRENT EXECUTION LOCK
 
-**IMPLEMENT — Production scaffold + Recipe 0001 Cook Run vertical slice.**
+**AWAITING OWNER/BROWSER VALIDATION — Production scaffold + Recipe 0001 Cook Run vertical slice.**
 
-Accepted architecture:
+PR:
+
+- #1 — `Establish Curadh Cooking MVP and Recipe 0001 Cook Run flow`
+- branch: `feature/recipe-0001-v1`
+
+### Implemented flow
+
+**Recipe library -> Oatmeal Sandwich Bread -> Start Cook Run -> Cook Mode -> record observation/deviation -> finish -> result markers -> saved Recipe history.**
+
+Implemented architecture:
 
 - React + Vite + TypeScript web client;
 - Node + Fastify + TypeScript API;
@@ -20,42 +27,40 @@ Accepted architecture:
 - modular monolith;
 - no external AI dependency for the first usable Cook Mode.
 
-Canonical architecture owners:
+### Automated validation
 
-- `docs/architecture/ADR-0003-mvp-web-architecture.md`
-- `docs/architecture/MVP_DOMAIN_MODEL.md`
+Latest branch validation: **PASS**
 
-### Required vertical flow
+- TypeScript typecheck — PASS
+- API/domain tests — PASS
+- production build — PASS
+- Playwright browser vertical flow — PASS
 
-**Recipe library -> Oatmeal Sandwich Bread -> Start Cook Run -> Cook Mode -> record observation/deviation -> finish -> result markers -> saved Recipe history.**
+The browser automation proves:
 
-### Acceptance
+- Recipe 0001 loads;
+- proven White / Light / 1.5 lb settings render;
+- a Cook Run can start;
+- a live observation can be recorded and persisted;
+- result markers save independently;
+- `Height / rise = mixed` can coexist with `Flavor = hit`;
+- the completed run appears in Recipe history.
 
-- repository has runnable TypeScript web/API scaffold;
-- SQLite database initializes through version-controlled migration(s);
-- Recipe 0001 is seeded as development/product evidence without private profile data;
-- recipe library lists Recipe 0001;
-- Recipe 0001 detail exposes ingredients, proven Breadman settings, steps, successful result summary, and known height improvement opportunity;
-- Start Cook Run creates a persisted active run;
-- Cook Mode supports current step/stage navigation;
-- Cook Mode can record at least one observation/deviation event during the run;
-- run completion records recipe-specific result markers independently so one mixed marker does not mark the whole recipe failed;
-- completed run appears in Recipe 0001 history;
-- automated validation covers domain/API behavior;
-- browser validation covers the complete vertical flow;
-- no real private household profile/medical data is committed.
+### Owner/browser validation requested
 
-### Scope boundary
+Review the current functional scaffolding, not final visual design.
 
-Do not add in this lock:
+1. Home communicates a goal-first starting point and exposes Oatmeal Sandwich Bread.
+2. Recipe detail foregrounds useful cooking facts, proven settings, known successes, and the height improvement opportunity without lifestyle-blog filler.
+3. Start Cook Run enters a clear step-oriented Cook Mode.
+4. Record a live observation/deviation and verify it appears in the run notes.
+5. Finish the run and record independent results — especially one successful marker and one mixed marker.
+6. Save results and verify the completed run appears in Recent Cook Runs.
+7. Report whether this interaction model feels like the right foundation for the eventual goal + ingredients + profile + tools + time experience.
 
-- external recipe search;
-- external AI/reasoning provider;
-- full Profile/Mapping UI;
-- public sharing/accounts;
-- nutrition database;
-- sophisticated pantry inventory;
-- unrelated design polish.
+### Merge gate
+
+Do not merge PR #1 until Jim approves the browser/experience review.
 
 ## Recently closed
 
