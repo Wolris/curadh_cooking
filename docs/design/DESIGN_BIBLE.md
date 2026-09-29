@@ -728,3 +728,22 @@ When editing a note from an earlier step, changing its type or wording must pres
 Because note entry shifts attention down the Cook Mode page, Previous / Next navigation should be repeated immediately after the run-note area.
 
 Finish Cook Run remains a separate action below ordinary step navigation so moving to the next step is less likely to be confused with ending the run.
+
+
+### Completed Cook Runs remain correctable evidence
+
+Submitting a Cook Run freezes its execution status as **completed**, but does not make human-entered evidence immutable.
+
+A completed Cook Run must support a dedicated **Edit run** experience that:
+
+- preserves the original frozen Recipe/Run snapshot;
+- preserves started/completed timestamps and completed status;
+- allows run notes/deviations to be added after submission when something was omitted;
+- allows existing notes to be edited, reclassified, or deleted;
+- keeps every note tied to a valid generated Prep/Cook step;
+- allows submitted result-marker outcomes and notes to be corrected;
+- clearly distinguishes correction of historical evidence from changing the reusable Recipe.
+
+A completed run is not “reopened” for cooking merely because its evidence is corrected.
+
+This is important because post-run reflection often reveals classification or transcription mistakes immediately after submission. The product should make correction easier than recreating the Cook Run or silently tolerating bad evidence.
