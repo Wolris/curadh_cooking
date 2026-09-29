@@ -68,7 +68,7 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
   ).toBeVisible();
   await expect(page.getByText("20 minutes", { exact: true })).toBeVisible();
   await expect(page.getByText(/15 minutes natural/)).toBeVisible();
-  await expect(page.getByText(/Cuisinart/)).toBeVisible();
+  await expect(page.getByText("Carrot puree", { exact: true })).toBeVisible();
   await expect(page.getByText("165°F / 74°C", { exact: true })).toBeVisible();
   await expect(page.getByText(/POTS: soup can be a useful fluid\/sodium vehicle/)).toBeVisible();
   await expect(page.getByText(/MCAS: do not apply a universal avoid list/)).toBeVisible();
