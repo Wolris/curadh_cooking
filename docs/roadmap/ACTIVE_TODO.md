@@ -6,7 +6,7 @@
 
 ## CURRENT EXECUTION LOCK
 
-**AWAITING AUTOMATED + OWNER KITCHEN VALIDATION — Recipe 0002 Homemade Chicken Soup.**
+**AWAITING OWNER SITE STORY REVIEW + KITCHEN VALIDATION — Recipe 0002 Homemade Chicken Soup.**
 
 Branch:
 
@@ -80,9 +80,25 @@ Result markers:
 - browser recipe detail exposes the pressure time, release, Cuisinart guidance, and profile-first POTS/MCAS note;
 - existing Recipe 0001 Cook Run flow remains green.
 
+### Owner site-story validation requested
+
+Before cooking, pull this branch and review Recipe 0002 in the site as a **Draft**.
+
+Verify that the page tells the complete story needed to cook without referring back to chat:
+
+- Draft status is obvious and does not imply the recipe is proven;
+- ingredients and quantities are complete;
+- planned Instant Pot / Cuisinart / thermometer setup is understandable;
+- POTS / MCAS context is presented as profile-aware guidance rather than a universal safety claim;
+- method sequence and food-safety cues are sufficient;
+- the page explicitly states what the first Cook Run is meant to test;
+- **Start Cook Run** works for the Draft and enters the Recipe 0002 steps.
+
+Report any missing/awkward storytelling before or during the cook as Cook Run observations rather than silently fixing around the site.
+
 ### Owner kitchen validation requested
 
-Cook Recipe 0002 as written, then report:
+Cook Recipe 0002 from the site as written, then report:
 
 1. **Broth flavor** — hit / mixed / miss
 2. **Carrot body / texture** — hit / mixed / miss
@@ -101,7 +117,7 @@ Also report any deviation that matters:
 - Cuisinart puree adjustment;
 - profile-specific tolerance observation.
 
-Do **not** promote Recipe 0002 from Draft to Tested until an actual Cook Run is reported.
+Do **not** promote Recipe 0002 from Draft to Tested until an actual Cook Run is reported. Do **not** promote it to Canonical until Jim explicitly approves the tested recipe as the current proven/recommended version.
 
 ## Dependency / existing merge gate
 
