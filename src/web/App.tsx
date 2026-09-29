@@ -72,6 +72,7 @@ type ResultMarker = {
 };
 
 type RunResult = {
+  resultMarkerId: string;
   label: string;
   outcome: ResultOutcome;
   note?: string | null;
@@ -142,6 +143,12 @@ type RunEvent = {
   eventType: CookRunEventType;
   text: string;
   createdAt: string;
+};
+
+type CompletedRunDetail = ActiveRun & {
+  completedAt?: string | null;
+  events: RunEvent[];
+  results: RunResult[];
 };
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -228,6 +235,8 @@ export function App() {
   const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
   const [selections, setSelections] = useState<Record<string, RecipeSelectionValue>>({});
   const [activeRun, setActiveRun] = useState<ActiveRun | null>(null);
+  const [completedRunEdit, setCompletedRunEdit] = useState<CompletedRunDetail | null>(null);
+  const [completedRunEventStepKey, setCompletedRunEventStepKey] = useState<string>("");
   const [viewingRecipeDuringRun, setViewingRecipeDuringRun] = useState(false);
   const [runEvents, setRunEvents] = useState<RunEvent[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -238,6 +247,8 @@ export function App() {
   const [finishing, setFinishing] = useState(false);
   const [resultValues, setResultValues] = useState<Record<string, ResultOutcome>>({});
   const [resultNotes, setResultNotes] = useState<Record<string, string>>({});
+  const [completedResultValues, setCompletedResultValues] = useState<Record<string, ResultOutcome>>({});
+  const [completedResultNotes, setCompletedResultNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -283,7 +294,8 @@ export function App() {
 
   const configuration = recipe?.variant.configuration ?? null;
   const runSteps = useMemo<RunPlanStep[]>(() => {
-    if (activeRun?.snapshot?.steps) return activeRun.snapshot.steps;
+    const snapshotSteps = activeRun?.snapshot?.steps ?? completedRunEdit?.snapshot?.steps;
+    if (snapshotSteps) return snapshotSteps;
     return (recipe?.variant.steps ?? []).map((step) => ({
       key: step.id,
       sourceStepId: step.id,
@@ -291,7 +303,7 @@ export function App() {
       stageKey: step.stageKey,
       instruction: step.instruction
     }));
-  }, [activeRun?.snapshot, recipe?.variant.steps]);
+  }, [activeRun?.snapshot, completedRunEdit?.snapshot, recipe?.variant.steps]);
 
   const currentRunStep = runSteps[currentStepIndex] ?? null;
 
@@ -343,6 +355,89 @@ export function App() {
     setEventType("observation");
     setEventText("");
     setFinishing(false);
+  }
+
+  async function openCompletedRun(runId: string) {
+    if (!recipe) return;
+    setError(null);
+
+    try {
+      const run = await requestJson<CompletedRunDetail>(`/api/cook-runs/${runId}`);
+      const steps =
+        run.snapshot?.steps ??
+        recipe.variant.steps.map((step) => ({
+          key: step.id,
+          sourceStepId: step.id,
+          stage: "cook" as const,
+          stageKey: step.stageKey,
+          instruction: step.instruction
+        }));
+
+      setCompletedRunEdit(run);
+      setCompletedRunEventStepKey(steps[0]?.key ?? "");
+      setCompletedResultValues(
+        Object.fromEntries(
+          recipe.resultMarkers.map((marker) => [
+            marker.id,
+            run.results.find((result) => result.resultMarkerId === marker.id)?.outcome ??
+              "not-observed"
+          ])
+        )
+      );
+      setCompletedResultNotes(
+        Object.fromEntries(
+          recipe.resultMarkers.map((marker) => [
+            marker.id,
+            run.results.find((result) => result.resultMarkerId === marker.id)?.note ?? ""
+          ])
+        )
+      );
+      setEditingEventId(null);
+      setEditingRunStepKey(null);
+      setEventType("observation");
+      setEventText("");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
+  async function closeCompletedRunEditor() {
+    if (!recipe) {
+      setCompletedRunEdit(null);
+      return;
+    }
+    const slug = recipe.slug;
+    setCompletedRunEdit(null);
+    setEditingEventId(null);
+    setEditingRunStepKey(null);
+    setEventType("observation");
+    setEventText("");
+    await openRecipe(slug);
+  }
+
+  async function saveCompletedResults() {
+    if (!recipe || !completedRunEdit) return;
+    setError(null);
+
+    try {
+      await requestJson(`/api/cook-runs/${completedRunEdit.id}/results`, {
+        method: "PUT",
+        body: JSON.stringify({
+          results: recipe.resultMarkers.map((marker) => ({
+            resultMarkerId: marker.id,
+            outcome: completedResultValues[marker.id] ?? "not-observed",
+            note: completedResultNotes[marker.id] ?? ""
+          }))
+        })
+      });
+
+      const refreshed = await requestJson<CompletedRunDetail>(
+        `/api/cook-runs/${completedRunEdit.id}`
+      );
+      setCompletedRunEdit(refreshed);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
   }
 
   async function openRecipe(slug: string) {
@@ -423,17 +518,28 @@ export function App() {
   }
 
   async function refreshRun() {
-    if (!activeRun) return;
-    const run = await requestJson<ActiveRun & { events: RunEvent[] }>(
-      `/api/cook-runs/${activeRun.id}`
+    const target = activeRun ?? completedRunEdit;
+    if (!target) return;
+
+    const run = await requestJson<CompletedRunDetail>(
+      `/api/cook-runs/${target.id}`
     );
-    setActiveRun(run);
-    setRunEvents(run.events);
+
+    if (activeRun) {
+      setActiveRun(run);
+      setRunEvents(run.events);
+    } else {
+      setCompletedRunEdit(run);
+    }
   }
 
   async function saveEvent() {
-    if (!activeRun || !eventText.trim()) return;
-    const runStepKey = editingRunStepKey ?? currentRunStep?.key ?? null;
+    const editableRun = activeRun ?? completedRunEdit;
+    if (!editableRun || !eventText.trim()) return;
+    const runStepKey =
+      editingRunStepKey ??
+      (activeRun ? currentRunStep?.key : completedRunEventStepKey) ??
+      null;
     if (!runStepKey) {
       setError("A Cook Run note must be tied to a run step.");
       return;
@@ -443,7 +549,7 @@ export function App() {
 
     try {
       if (editingEventId) {
-        await requestJson(`/api/cook-runs/${activeRun.id}/events/${editingEventId}`, {
+        await requestJson(`/api/cook-runs/${editableRun.id}/events/${editingEventId}`, {
           method: "PATCH",
           body: JSON.stringify({
             eventType,
@@ -452,10 +558,11 @@ export function App() {
           })
         });
       } else {
-        await requestJson(`/api/cook-runs/${activeRun.id}/events`, {
+        await requestJson(`/api/cook-runs/${editableRun.id}/events`, {
           method: "POST",
           body: JSON.stringify({
-            stepId: currentRunStep?.sourceStepId ?? null,
+            stepId:
+              runSteps.find((step) => step.key === runStepKey)?.sourceStepId ?? null,
             runStepKey,
             eventType,
             text: eventText.trim(),
@@ -492,15 +599,24 @@ export function App() {
   }
 
   async function deleteEvent(event: RunEvent) {
-    if (!activeRun) return;
+    const editableRun = activeRun ?? completedRunEdit;
+    if (!editableRun) return;
     setError(null);
 
     try {
-      await requestJson(`/api/cook-runs/${activeRun.id}/events/${event.id}`, {
+      await requestJson(`/api/cook-runs/${editableRun.id}/events/${event.id}`, {
         method: "DELETE"
       });
       if (editingEventId === event.id) cancelEventEdit();
-      setRunEvents((current) => current.filter((item) => item.id !== event.id));
+      if (activeRun) {
+        setRunEvents((current) => current.filter((item) => item.id !== event.id));
+      } else {
+        setCompletedRunEdit((current) =>
+          current
+            ? { ...current, events: current.events.filter((item) => item.id !== event.id) }
+            : current
+        );
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     }
