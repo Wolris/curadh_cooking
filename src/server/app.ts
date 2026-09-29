@@ -523,14 +523,34 @@ export function buildServer(options: BuildServerOptions = {}) {
         return reply.code(400).send({ error: "Run note step does not belong to this Cook Run" });
       }
 
+      const existing = db.prepare(`
+        SELECT structured_data_json AS structuredDataJson
+        FROM cook_run_events
+        WHERE id = ? AND cook_run_id = ?
+      `).get(request.params.eventId, request.params.id) as
+        | { structuredDataJson?: string | null }
+        | undefined;
+
+      if (!existing) return reply.code(404).send({ error: "Cook Run note not found" });
+
+      const structuredData =
+        existing.structuredDataJson
+          ? JSON.parse(existing.structuredDataJson) as Record<string, unknown>
+          : {};
+
       const result = db.prepare(`
         UPDATE cook_run_events
-        SET event_type = ?, text = ?, run_step_key = ?
+        SET event_type = ?, text = ?, run_step_key = ?, structured_data_json = ?
         WHERE id = ? AND cook_run_id = ?
       `).run(
         parsed.data.eventType,
         parsed.data.text,
         parsed.data.runStepKey,
+        JSON.stringify({
+          ...structuredData,
+          action: parsed.data.eventType,
+          runStepKey: parsed.data.runStepKey
+        }),
         request.params.eventId,
         request.params.id
       );
