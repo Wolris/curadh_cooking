@@ -9,3 +9,4 @@ data/*.sqlite-*
 .env.*
 !.env.example
 validation-logs/
+package-lock.json
