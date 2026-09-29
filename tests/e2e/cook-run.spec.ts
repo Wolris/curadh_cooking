@@ -13,7 +13,7 @@ test("Recipe 0001 can create a Cook Run, record reality, and save independent re
     page.getByRole("heading", { name: "Oatmeal Sandwich Bread" })
   ).toBeVisible();
   await expect(page.getByText("Loaf size")).toBeVisible();
-  await expect(page.getByText("1.5 lb")).toBeVisible();
+  await expect(page.getByText("1.5 lb", { exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Start Cook Run" }).click();
   await expect(page.getByText("Cook Mode")).toBeVisible();
