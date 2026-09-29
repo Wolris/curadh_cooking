@@ -420,3 +420,97 @@ The next browser review should answer:
 8. Is recording a substitution materially faster than writing a note?
 9. Is the distinction between planned recipe and actual run understandable without explanation?
 10. On mobile, can the cook operate the primary controls comfortably in a real kitchen context?
+
+
+---
+
+## 8. Owner review findings — persistent recipe context, estimates, and persistence
+
+The first owner browser review exposed several interaction requirements that supersede the assumption that a separate View Recipe action is sufficient during Cook Mode.
+
+### Cook Mode keeps recipe context visible
+
+On layouts with sufficient width, the active instruction and recipe context should coexist.
+
+The preferred desktop pattern is:
+
+- primary active instruction/work area;
+- a recipe-context panel/rail to the right.
+
+Mobile should preserve the same information hierarchy through a compact, collapsible, drawer, or stacked treatment rather than trying to maintain a desktop two-column layout.
+
+### Prep uses the ingredient list as progress/navigation
+
+During Prep:
+
+- the recipe-context area is ingredient-oriented;
+- ingredients/prep items appear in preparation order;
+- the current item is highlighted;
+- completed prep items are visibly checked off;
+- selecting **Next step** marks the current prep item complete and advances;
+- completed state must be persistent run state, not merely a transient visual effect;
+- where multiple prep operations belong to one ingredient, the UI should preserve enough structure to show what remains.
+
+The goal is to let the cook answer, at a glance, **what ingredient am I preparing, what is already ready, and what comes next?**
+
+### Cook uses an interactive step outline
+
+During Cook:
+
+- the recipe-context area switches from ingredient-oriented prep progress to cooking-step orientation;
+- every cooking step has a concise excerpt;
+- the active step is highlighted and expanded;
+- inactive steps remain compact but interactive;
+- selecting another step jumps the run to that step and expands it;
+- moving with Previous / Next updates the same persistent run position.
+
+The current full instruction remains the primary work surface; the outline is orientation and navigation.
+
+### Estimated conversions are allowed when explicitly framed
+
+Recipe-authored and verified conversions remain preferred.
+
+However, when a user asks for an alternate unit or practical substitution and no verified conversion exists, Curadh Cooking may provide a **relative, unverified estimate** when useful.
+
+Requirements:
+
+- label it clearly as an estimate;
+- explain that ingredient size, density, brand, preparation, or packing can change the result when relevant;
+- never silently promote an estimated conversion into canonical recipe data;
+- allow later kitchen evidence to verify or replace the estimate.
+
+The product should prefer **useful uncertainty** over refusing to help when an approximate answer is appropriate.
+
+### Tolerance notices
+
+Sensitivity messaging should default to **tolerance-awareness guidance**, not medical-warning language.
+
+A useful pattern is:
+
+> Be aware of tolerance: this ingredient or form may work differently for different profiles. Omit or substitute it when it does not fit the selected profile.
+
+Specific sourced considerations may still be shown, but the UI should not imply diagnosis or universal safety/unsafety.
+
+### Cook Run persistence and recovery
+
+A successfully recorded run event must be durable.
+
+For the current local MVP:
+
+- Cook Runs and run events are stored in the local SQLite database;
+- browser refresh, server restart, or navigation must not make an active run effectively unreachable;
+- the app needs an **active run recovery/resume path**;
+- persisted current step, completed prep/step progress, frozen snapshot, and recorded deviations must be restored.
+
+A failed save must produce visible error feedback. Silent failure is unacceptable during cooking.
+
+### Structured change prototype finding
+
+The first structured change prototype exposed a schema/persistence defect: newly added action types such as **Add** were accepted by the frontend contract but rejected by the older SQLite CHECK constraint.
+
+The fix must:
+
+- migrate the stored event-type constraint;
+- test every supported structured action type;
+- surface server persistence errors visibly;
+- preserve successfully recorded events through active-run recovery.
