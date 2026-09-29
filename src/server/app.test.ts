@@ -180,6 +180,7 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
       method: "POST",
       url: `/api/cook-runs/${run.id}/events`,
       payload: {
+        runStepKey: run.currentStepKey,
         eventType: "ingredient-add",
         text: "Added 1 tsp garlic powder.",
         structuredData: {
@@ -203,6 +204,78 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
         })
       ])
     );
+  });
+
+  it("edits type/text in place and deletes a step-bound Cook Run note", async () => {
+    app = buildServer({ dbPath: ":memory:" });
+
+    const detailResponse = await app.inject({
+      method: "GET",
+      url: "/api/recipes/homemade-chicken-soup"
+    });
+    const recipe = detailResponse.json();
+
+    const started = await app.inject({
+      method: "POST",
+      url: "/api/cook-runs",
+      payload: {
+        recipeId: recipe.id,
+        variantId: recipe.variant.id
+      }
+    });
+    const run = started.json();
+
+    const created = await app.inject({
+      method: "POST",
+      url: `/api/cook-runs/${run.id}/events`,
+      payload: {
+        runStepKey: run.currentStepKey,
+        eventType: "setting-change",
+        text: "I added 1 tsp Garlic Powder",
+        structuredData: {
+          action: "setting-change",
+          runStepKey: run.currentStepKey
+        }
+      }
+    });
+    expect(created.statusCode).toBe(201);
+    const eventId = created.json().id;
+
+    const updated = await app.inject({
+      method: "PATCH",
+      url: `/api/cook-runs/${run.id}/events/${eventId}`,
+      payload: {
+        eventType: "ingredient-add",
+        text: "I added 1 tsp Garlic Powder",
+        runStepKey: run.currentStepKey
+      }
+    });
+    expect(updated.statusCode).toBe(200);
+
+    const afterUpdate = await app.inject({
+      method: "GET",
+      url: `/api/cook-runs/${run.id}`
+    });
+    expect(afterUpdate.json().events).toEqual([
+      expect.objectContaining({
+        id: eventId,
+        eventType: "ingredient-add",
+        runStepKey: run.currentStepKey,
+        text: "I added 1 tsp Garlic Powder"
+      })
+    ]);
+
+    const deleted = await app.inject({
+      method: "DELETE",
+      url: `/api/cook-runs/${run.id}/events/${eventId}`
+    });
+    expect(deleted.statusCode).toBe(200);
+
+    const afterDelete = await app.inject({
+      method: "GET",
+      url: `/api/cook-runs/${run.id}`
+    });
+    expect(afterDelete.json().events).toHaveLength(0);
   });
 
   it("persists a Cook Run event and independent result markers", async () => {
@@ -230,6 +303,7 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
       url: `/api/cook-runs/${run.id}/events`,
       payload: {
         stepId: recipe.variant.steps[0].id,
+        runStepKey: recipe.variant.steps[0].id,
         eventType: "observation",
         text: "Batter is thicker than the previous run."
       }
