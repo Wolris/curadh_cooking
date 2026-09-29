@@ -43,10 +43,28 @@ Implemented on this branch:
 
 Still intentionally open under the same lock:
 
-- finish structured live ingredient-change affordances beyond the existing event capture;
+- complete the focused UX-definition pass before additional feature UI implementation;
 - complete automated/browser validation on the latest head;
-- owner browser/story review;
+- implement structured live ingredient-change affordances from the accepted UX model;
+- owner browser/story review on desktop and mobile/kitchen scale;
 - reconcile any review findings before resuming Recipe 0002 kitchen validation.
+
+### UX-definition gate
+
+The focused UX-definition pass is complete in `docs/design/COOK_RUN_UX_DEFINITION.md`.
+
+It defines:
+
+- end-to-end Recipe -> Configure -> Snapshot -> Prep -> Cook -> Evaluate flow;
+- active-run Recipe inspection and return path;
+- use-case/state matrix for pre-run configuration versus mid-run reality;
+- low-fidelity screen/state maps;
+- feature goals;
+- interaction risks and mitigations;
+- next-slice implementation decisions;
+- owner-review questions.
+
+Development may resume only from those accepted interaction decisions; do not extend the generic settings-style UI opportunistically.
 
 ### Ordered implementation slices
 
