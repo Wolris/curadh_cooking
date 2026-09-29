@@ -16,8 +16,10 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
     const list = await app.inject({ method: "GET", url: "/api/recipes" });
     expect(list.statusCode).toBe(200);
     const recipes = list.json();
-    expect(recipes).toHaveLength(1);
-    expect(recipes[0].title).toBe("Oatmeal Sandwich Bread");
+    expect(recipes).toHaveLength(2);
+    expect(recipes.map((recipe: { title: string }) => recipe.title)).toEqual(
+      expect.arrayContaining(["Oatmeal Sandwich Bread", "Homemade Chicken Soup"])
+    );
 
     const detail = await app.inject({
       method: "GET",
@@ -33,6 +35,51 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
       ])
     );
     expect(recipe.resultMarkers.length).toBeGreaterThan(1);
+  });
+
+
+  it("loads the draft Instant Pot + Cuisinart chicken soup adaptation", async () => {
+    app = buildServer({ dbPath: ":memory:" });
+
+    const detail = await app.inject({
+      method: "GET",
+      url: "/api/recipes/homemade-chicken-soup"
+    });
+    expect(detail.statusCode).toBe(200);
+
+    const recipe = detail.json();
+    expect(recipe.status).toBe("draft");
+    expect(recipe.variant.ingredients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "Bone-in chicken thighs and/or drumsticks" }),
+        expect.objectContaining({ name: "Carrots" }),
+        expect.objectContaining({ name: "Fine salt" })
+      ])
+    );
+    expect(recipe.variant.equipmentSettings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          equipment: "Instant Pot pressure cooker",
+          settingKey: "Cook time",
+          settingValue: "20 minutes"
+        }),
+        expect.objectContaining({
+          equipment: "Cuisinart blender / food processor",
+          settingKey: "Carrot puree"
+        }),
+        expect.objectContaining({
+          equipment: "Instant-read food thermometer",
+          settingValue: "165°F / 74°C"
+        })
+      ])
+    );
+    expect(recipe.resultMarkers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "Broth flavor" }),
+        expect.objectContaining({ label: "Carrot body / texture" }),
+        expect.objectContaining({ label: "Salt balance" })
+      ])
+    );
   });
 
   it("persists a Cook Run event and independent result markers", async () => {
