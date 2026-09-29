@@ -67,7 +67,7 @@ Cook Mode is a core product direction. MVP should first support structured recip
 
 ## Current execution lock
 
-Choose the initial internal MVP web architecture and persistence shape, then define the first implementation vertical slice.
+Implement the first end-to-end Recipe/Cook Run vertical slice: Recipe library -> Oatmeal Sandwich Bread -> Start Cook Run -> Cook Mode -> observation/deviation -> result markers -> saved run history.
 
 ## Repository visibility
 
@@ -79,3 +79,15 @@ GitHub currently reports this repository as **public**. Treat repository fixture
 2. read fresh `docs/roadmap/ACTIVE_TODO.md`;
 3. load only the relevant Design Bible/ADR/recipe material for the current lock;
 4. execute that lock.
+
+
+## Accepted MVP architecture
+
+- React + Vite + TypeScript
+- Node + Fastify + TypeScript
+- SQLite with version-controlled migrations
+- shared Zod contracts
+- modular monolith
+- future contextual reasoning seam; external AI is not required for initial Cook Mode
+
+See `docs/architecture/ADR-0003-mvp-web-architecture.md` and `docs/architecture/MVP_DOMAIN_MODEL.md`.
