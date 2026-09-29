@@ -110,3 +110,10 @@ After cooling, report:
 - Dry/crumbly: modestly increase hydration, fat, or binding.
 
 Do not attribute V1/V2 density differences to one ingredient alone; several variables changed.
+
+
+## V3 kitchen test notes
+
+- Crust treatment used: about **2 Tbsp butter total**.
+- Butter was microwaved for **20 seconds at 50% power**.
+- Butter was applied while the loaf was warm to **all six sides** of the loaf.
