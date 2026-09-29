@@ -3,6 +3,9 @@ import { z } from "zod";
 export const cookRunEventTypeSchema = z.enum([
   "observation",
   "substitution",
+  "ingredient-skip",
+  "ingredient-add",
+  "amount-change",
   "setting-change",
   "intervention",
   "note"
