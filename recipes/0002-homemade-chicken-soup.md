@@ -14,16 +14,16 @@ This version preserves that structure while using an Instant Pot for the cook an
 
 ## Yield
 
-About **6 to 8 bowls**, depending on final water level and how much chicken is returned to the soup.
+About **6 bowls**, depending on final water level and how much chicken is returned to the soup.
 
 ## Ingredients
 
-- 3 to 3 1/2 lb bone-in chicken thighs and/or drumsticks
-- 8 medium carrots, peeled and cut into large pieces
-- 1 large yellow onion, quartered
-- 3 celery stalks, cut in half
-- 8 to 10 parsley sprigs, or about 1/2 cup loosely packed parsley
-- 6 cups cold water, or only enough to nearly cover the ingredients while remaining below the applicable pressure-cook fill line for the Instant Pot
+- 2 1/2 to 3 lb bone-in chicken thighs and/or drumsticks
+- 6 to 8 medium carrots, peeled and cut into large pieces
+- 1 large yellow onion, quartered — optional if the selected profile flags it
+- 2 to 3 celery stalks, cut in half — optional if the selected profile flags it
+- 8 to 10 parsley sprigs — optional if the selected profile flags it
+- 4 to 6 cups cold water, using only enough to nearly cover the ingredients while remaining below the applicable pressure-cook fill line for the Instant Pot
 - 2 tsp fine salt to start, plus more at the end if wanted
 
 ### Profile-specific option
@@ -53,7 +53,7 @@ Do not exceed the fill limit that applies to pressure cooking/soup on the specif
 ## Method
 
 1. Put the chicken, carrots, onion, celery, parsley, and 2 tsp salt into the Instant Pot.
-2. Add 6 cups cold water, or only enough to nearly cover the ingredients without exceeding the applicable pressure-cook fill line.
+2. Add 4 to 6 cups cold water, using only enough to nearly cover the ingredients without exceeding the applicable pressure-cook fill line.
 3. Lock the lid and cook on **High Pressure for 20 minutes**.
 4. When the cook ends, allow **15 minutes of natural pressure release**, then carefully release the remaining pressure according to the Instant Pot instructions.
 5. Check the thickest chicken piece with an instant-read thermometer. Poultry must reach **165°F / 74°C**. If it has not, cook it further before serving.
