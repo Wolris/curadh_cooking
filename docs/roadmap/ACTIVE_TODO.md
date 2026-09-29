@@ -6,118 +6,88 @@
 
 ## CURRENT EXECUTION LOCK
 
-**AWAITING OWNER SITE STORY REVIEW + KITCHEN VALIDATION — Recipe 0002 Homemade Chicken Soup.**
+**IMPLEMENT CONFIGURABLE RECIPE -> FROZEN COOK RUN SNAPSHOT -> PREP-FIRST COOK MODE.**
 
 Branch:
 
 - `feature/recipe-0002-chicken-soup`
-- stacked on `feature/recipe-0001-v1` because Recipe/Cook Run scaffolding is still in PR #1
+- this work is a direct result of Recipe 0002 site-story review;
+- Recipe 0002 remains **Draft** and its kitchen-validation gate remains intact.
 
-### Recipe 0002 scope
+### Accepted site-story findings
 
-Add the user-supplied Homemade Chicken Soup as a **Draft** recipe and adapt it for:
+The Recipe 0002 review established these requirements:
 
-- Instant Pot pressure cooking;
-- Cuisinart blender / food processor carrot puree;
-- instant-read thermometer verification;
-- profile-first POTS / MCAS notes rather than a universal safe/unsafe label.
+1. Ingredient rows can expose supported **include / omit** choices.
+2. Ingredient rows can expose supported **form choices** such as fresh/raw versus prepared/pre-chopped/packaged forms.
+3. Supported conversions are authored per recipe/ingredient; do not invent universal sprig/clove/stalk conversions.
+4. Ingredient/form choices may expose calm profile-aware advisories, including a reminder to inspect packaged ingredients when relevant.
+5. Prep is part of a Cook Run and normally occurs before cooking.
+6. Optional prep operations, such as peeling when explicitly optional, can be disabled and then disappear from the generated run.
+7. Equipment/method choices, such as Cuisinart versus knife, can change prep instructions and estimated active time.
+8. **Start Cook Run** freezes the selected recipe configuration into that run.
+9. Cook Mode shows stage/progress and allows previous/next navigation.
+10. The complete configured Recipe remains reachable during a run, with an obvious return to the same run position.
+11. During a run the cook can record added/substituted/skipped ingredients, changed amounts/settings, and observations without silently rewriting the Recipe.
+12. Simple tool/action/ingredient icons are accepted as a later visual layer, not a prerequisite for the structured workflow.
 
-Source recipe facts preserved:
+### Ordered implementation slices
 
-- chicken parts are the broth base;
-- carrots are cooked with the chicken;
-- onion, celery, and parsley are aromatics;
-- soup is strained and surface fat may be skimmed;
-- cooked carrots are pureed back into the broth.
+#### Slice A — domain contract + persistence foundation
 
-The Curadh Cooking adaptation uses an original pressure-cooker method rather than copying the source wording.
+- represent supported ingredient configuration choices;
+- represent optional prep operations and preparation-method choices;
+- add recipe-provided prep-time estimates for supported methods;
+- persist a Cook Run configuration snapshot at start;
+- preserve post-start deviations separately from that snapshot.
 
-### POTS / MCAS fact-check
+#### Slice B — Recipe 0002 configuration seed
 
-Current evidence summary:
+Use the chicken soup as the concrete proving case:
 
-- POTS care often uses increased oral fluid and sodium when clinically appropriate; one universal sodium dose is not correct for every person.
-- MCAS does not have one evidence-based universal food-avoid list; individual triggers and profile overrides matter.
-- Histamine already present in food is heat-stable; pressure cooking is not a histamine-destruction claim.
-- Freshness/storage can matter for biogenic amines; prompt cooling/freezing remains relevant.
-- Poultry must reach at least 165°F / 74°C and leftovers should be chilled promptly.
+- onion/celery/parsley can expose intentional omit/include behavior where supported;
+- parsley can expose an authored prepared-form alternative instead of requiring only sprigs;
+- carrots expose prep choices needed to distinguish Cuisinart versus knife workflow;
+- optional peeling can be represented independently from the carrot ingredient itself;
+- relevant ingredient/form advisories remain profile-aware and non-alarmist.
 
-The recipe record preserves reviewed source links and uncertainty.
+#### Slice C — recipe-detail configuration UI
 
-### Implemented Recipe 0002 draft
+- ingredient rows expose the supported controls without becoming separate workflows;
+- selected forms show the correct quantity/form language;
+- equipment/prep method choices update the planned prep/time story before the run starts;
+- omitted ingredients and disabled optional prep are visually reversible.
 
-Initial validation batch:
+#### Slice D — prep-first generated Cook Run
 
-- 2 1/2 to 3 lb bone-in chicken thighs/drumsticks;
-- 6 to 8 carrots;
-- optional onion/celery/parsley according to profile;
-- 4 to 6 cups water, never exceeding the pressure-cook fill limit;
-- 2 tsp salt to start, adjusted after cooking according to taste/profile.
+- Start Cook Run freezes the configuration;
+- generated run begins with Prep;
+- disabled/omitted choices do not produce irrelevant instructions;
+- progress distinguishes Prep from Cook;
+- previous/next remains available.
 
-Equipment/settings:
+#### Slice E — recipe/run navigation + live deviations
 
-- Instant Pot Pressure Cook / Manual;
-- High pressure;
-- 20 minutes;
-- 15-minute natural release, then vent remaining pressure;
-- Cuisinart carrot puree starts with 1 cup broth;
-- chicken verified at 165°F / 74°C minimum.
+- View Recipe from an active run;
+- Return to Cooking Run at the preserved position;
+- configured ingredients remain visible from the recipe;
+- structured run changes include add, substitute, skip, changed amount, setting/prep change, and observation.
 
-Result markers:
+#### Slice F — validation and owner review
 
-- broth flavor;
-- carrot body / texture;
-- chicken tenderness;
-- salt balance;
-- aromatic balance;
-- overall soup usefulness.
+Automated validation must prove:
 
-### Automated validation target
+- configuration choices are returned by the Recipe API;
+- a started run preserves its own snapshot;
+- later UI/config changes do not silently rewrite the active run;
+- Recipe 0002 generates prep before cook steps;
+- omitted ingredients/disabled prep do not appear in generated instructions;
+- live substitutions/deviations remain Cook Run events;
+- Recipe 0001 existing Cook Run behavior remains green.
 
-- API lists both Recipe 0001 and Recipe 0002;
-- Recipe 0002 loads as Draft;
-- Instant Pot, Cuisinart, and thermometer settings render correctly;
-- browser recipe detail exposes the pressure time, release, Cuisinart guidance, and profile-first POTS/MCAS note;
-- existing Recipe 0001 Cook Run flow remains green.
+Owner browser review then verifies that Recipe 0002 tells the complete configure -> prep -> cook story.
 
-### Owner site-story validation requested
-
-Before cooking, pull this branch and review Recipe 0002 in the site as a **Draft**.
-
-Verify that the page tells the complete story needed to cook without referring back to chat:
-
-- Draft status is obvious and does not imply the recipe is proven;
-- ingredients and quantities are complete;
-- planned Instant Pot / Cuisinart / thermometer setup is understandable;
-- POTS / MCAS context is presented as profile-aware guidance rather than a universal safety claim;
-- method sequence and food-safety cues are sufficient;
-- the page explicitly states what the first Cook Run is meant to test;
-- **Start Cook Run** works for the Draft and enters the Recipe 0002 steps.
-
-Report any missing/awkward storytelling before or during the cook as Cook Run observations rather than silently fixing around the site.
-
-### Owner kitchen validation requested
-
-Cook Recipe 0002 from the site as written, then report:
-
-1. **Broth flavor** — hit / mixed / miss
-2. **Carrot body / texture** — hit / mixed / miss
-3. **Chicken tenderness** — hit / mixed / miss
-4. **Salt balance** — hit / mixed / miss
-5. **Aromatic balance** — hit / mixed / miss
-6. **Overall soup usefulness** — hit / mixed / miss
-
-Also report any deviation that matters:
-
-- actual chicken weight;
-- actual water amount;
-- any omitted aromatic;
-- salt added after cooking;
-- pressure/release change;
-- Cuisinart puree adjustment;
-- profile-specific tolerance observation.
-
-Do **not** promote Recipe 0002 from Draft to Tested until an actual Cook Run is reported. Do **not** promote it to Canonical until Jim explicitly approves the tested recipe as the current proven/recommended version.
+After that review, return to the existing Recipe 0002 kitchen-validation gate. Recipe 0002 must remain Draft until an actual Cook Run is completed and reported.
 
 ## Dependency / existing merge gate
 
