@@ -16,9 +16,9 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
     const list = await app.inject({ method: "GET", url: "/api/recipes" });
     expect(list.statusCode).toBe(200);
     const recipes = list.json();
-    expect(recipes).toHaveLength(2);
+    expect(recipes).toHaveLength(3);
     expect(recipes.map((recipe: { title: string }) => recipe.title)).toEqual(
-      expect.arrayContaining(["Oatmeal Sandwich Bread", "Homemade Chicken Soup"])
+      expect.arrayContaining(["Oatmeal Sandwich Bread", "Homemade Chicken Soup", "Whole-Milk Yogurt — Euro Cuisine"])
     );
 
     const detail = await app.inject({
@@ -154,6 +154,49 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
     });
     expect(fetched.statusCode).toBe(200);
     expect(fetched.json().snapshot).toEqual(run.snapshot);
+  });
+
+
+  it("loads draft Recipe 0003 whole-milk yogurt with the Euro Cuisine workflow", async () => {
+    app = buildServer({ dbPath: ":memory:" });
+
+    const detail = await app.inject({
+      method: "GET",
+      url: "/api/recipes/whole-milk-yogurt-euro-cuisine"
+    });
+    expect(detail.statusCode).toBe(200);
+
+    const recipe = detail.json();
+    expect(recipe.status).toBe("draft");
+    expect(recipe.variant.ingredients).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "Milk", quantity: "4 cups", form: "whole milk" }),
+        expect.objectContaining({ name: "Unflavored gelatin", quantity: "3.5 g" }),
+        expect.objectContaining({ name: "Yogourmet Original yogurt starter", quantity: "1 sachet (3 g)" })
+      ])
+    );
+    expect(recipe.variant.equipmentSettings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          equipment: "Euro Cuisine 7-jar yogurt maker",
+          settingKey: "Incubation",
+          settingValue: "Minimum 5 hours; target 5 to 8 hours for first run"
+        }),
+        expect.objectContaining({
+          equipment: "Refrigerator",
+          settingKey: "Cold set",
+          settingValue: "Cap after incubation and refrigerate about 8 hours"
+        })
+      ])
+    );
+    expect(recipe.resultMarkers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "Set / firmness" }),
+        expect.objectContaining({ label: "Creaminess" }),
+        expect.objectContaining({ label: "Tang / acidity" }),
+        expect.objectContaining({ label: "Whey separation" })
+      ])
+    );
   });
 
   it("persists a Cook Run event and independent result markers", async () => {
