@@ -136,8 +136,11 @@ type RunEvent = {
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
-    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
-    ...init
+    ...init,
+    headers: {
+      ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      ...(init?.headers ?? {})
+    }
   });
 
   if (!response.ok) {
