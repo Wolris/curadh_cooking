@@ -49,7 +49,14 @@ test("Recipe 0001 can create a Cook Run, record reality, and save independent re
 
   await page.getByRole("button", { name: "Edit run" }).first().click();
   await expect(page.getByRole("heading", { name: "Edit run evidence" })).toBeVisible();
-  await expect(page.getByText(/run stays completed/i)).toBeVisible();
+  await expect(page.getByText(/historical evidence/i)).toBeVisible();
+
+  const completedRunPlan = page.getByLabel("Run Plan");
+  await expect(completedRunPlan.getByRole("heading", { name: "Run Plan" })).toBeVisible();
+  await completedRunPlan.getByRole("button", { name: /Cook 1/ }).click();
+  await expect(page.getByLabel("Completed run change details")).toBeVisible();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+
   await expect(
     page.getByLabel("Completed Cook Run notes").getByText(
       "Batter is thicker than the last time, but still cohesive."
@@ -71,6 +78,9 @@ test("Recipe 0001 can create a Cook Run, record reality, and save independent re
   await expect(
     page.getByLabel("Completed Cook Run notes").getByText("Amount", { exact: true })
   ).toBeVisible();
+
+  await completedRunPlan.getByRole("button", { name: /Results/ }).click();
+  await expect(page.getByRole("heading", { name: "Result markers" })).toBeVisible();
 
   await page.getByLabel("Completed Height / rise outcome").selectOption("hit");
   await page.getByLabel("Completed Height / rise note").fill(
@@ -126,8 +136,10 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
     page.getByRole("heading", { name: /Peel the carrots, then chop them into large pieces with a knife/ })
   ).toBeVisible();
 
-  const recipeContext = page.getByLabel("Recipe context");
-  await expect(recipeContext.getByRole("heading", { name: "Prep ingredients" })).toBeVisible();
+  const recipeContext = page.getByLabel("Run Plan");
+  await expect(recipeContext.getByRole("heading", { name: "Run Plan" })).toBeVisible();
+  await expect(recipeContext.getByRole("button", { name: /Cooking/ })).toBeVisible();
+  await expect(recipeContext.getByRole("button", { name: /Results/ })).toBeVisible();
   await expect(recipeContext.getByRole("button", { name: /Carrots/ })).toHaveClass(/current/);
 
   await page.getByRole("button", { name: "View Recipe" }).click();
@@ -184,7 +196,7 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
   await expect(
     page.getByText("Used 1/2 white onion + 1/2 red onion instead of 1 yellow onion.")
   ).toBeVisible();
-  await expect(page.getByLabel("Recipe context").getByRole("button", { name: /Carrots/ }))
+  await expect(page.getByLabel("Run Plan").getByRole("button", { name: /Carrots/ }))
     .toHaveClass(/completed/);
 
   await page.getByRole("button", { name: "Next step" }).first().click();
@@ -192,8 +204,28 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
   await page.getByRole("button", { name: "Next step" }).first().click();
   await expect(page.getByText(/^Cook 1 of/)).toBeVisible();
 
-  const cookContext = page.getByLabel("Recipe context");
-  await expect(cookContext.getByRole("heading", { name: "Cooking steps" })).toBeVisible();
+  const cookContext = page.getByLabel("Run Plan");
+  await expect(cookContext.getByRole("heading", { name: "Run Plan" })).toBeVisible();
   await cookContext.getByRole("button", { name: /Step 2/ }).click();
   await expect(page.getByText(/^Cook 2 of/)).toBeVisible();
+
+  await cookContext.getByRole("button", { name: /^Prep/ }).click();
+  await expect(page.getByText(/^Prep 1 of/)).toBeVisible();
+
+  const prepPlanAgain = page.getByLabel("Run Plan");
+  await prepPlanAgain.getByRole("button", { name: /Cooking/ }).click();
+  await expect(page.getByText(/^Cook 1 of/)).toBeVisible();
+
+  const cookingPlanAgain = page.getByLabel("Run Plan");
+  await cookingPlanAgain.getByRole("button", { name: /Results/ }).click();
+  await expect(page.getByRole("heading", { name: "How did this run turn out?" })).toBeVisible();
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain("Cancel this Cook Run?");
+    await dialog.accept();
+  });
+  await page.getByRole("button", { name: "Cancel Run" }).click();
+
+  await expect(page.getByRole("heading", { name: "Recent Cook Runs" })).toBeVisible();
+  await expect(page.getByText("Cancelled", { exact: true }).first()).toBeVisible();
 });
