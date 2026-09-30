@@ -1058,6 +1058,198 @@ export function App() {
     const excerpt = (instruction: string) =>
       instruction.length > 86 ? `${instruction.slice(0, 83)}…` : instruction;
 
+    const renderRunPlan = () => (
+      <aside className="panel cook-context" aria-label="Run Plan">
+        <p className="eyebrow">Run navigation</p>
+        <h2>Run Plan</h2>
+
+        {finishing ? (
+          <ol className="run-outline">
+            <li>
+              <button
+                type="button"
+                className="outline-step section-jump"
+                onClick={() => void jumpToRunStage("prep")}
+              >
+                <span className="outline-marker">P</span>
+                <span className="outline-copy">
+                  <strong>Prep</strong>
+                  <small>Jump to Prep 1</small>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className="outline-step section-jump"
+                onClick={() => void jumpToRunStage("cook")}
+              >
+                <span className="outline-marker">C</span>
+                <span className="outline-copy">
+                  <strong>Cooking</strong>
+                  <small>Jump to Cook 1</small>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className="outline-step section-jump current"
+                aria-current="step"
+                onClick={openRunResults}
+              >
+                <span className="outline-marker">R</span>
+                <span className="outline-copy">
+                  <strong>Results</strong>
+                  <small>Current section</small>
+                </span>
+              </button>
+            </li>
+            {recipe.resultMarkers.map((marker) => (
+              <li key={marker.id} className="result-outline-item">
+                <button
+                  type="button"
+                  className="result-outline-link"
+                  onClick={() =>
+                    document
+                      .getElementById(`active-result-${marker.id}`)
+                      ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                  }
+                >
+                  {marker.label}
+                </button>
+              </li>
+            ))}
+          </ol>
+        ) : currentRunStep?.stage === "prep" ? (
+          <ol className="run-outline prep-outline">
+            {prepSteps.map((step, index) => {
+              const globalIndex = runSteps.findIndex((item) => item.key === step.key);
+              const ingredientId =
+                step.ingredientId ?? fallbackPrepIngredientIds[step.key];
+              const ingredient = activeRun.snapshot?.configuredIngredients.find(
+                (item) => item.id === ingredientId
+              );
+              const label =
+                step.label ??
+                ingredient?.name ??
+                step.key.replace(/^prep-/, "").replace(/-/g, " ");
+              const current = step.key === currentRunStep.key;
+              const completed = completedStepKeys.has(step.key);
+
+              return (
+                <li key={step.key}>
+                  <button
+                    type="button"
+                    className={[
+                      "outline-step",
+                      current ? "current" : "",
+                      completed ? "completed" : ""
+                    ].filter(Boolean).join(" ")}
+                    aria-current={current ? "step" : undefined}
+                    onClick={() => void moveStep(globalIndex)}
+                  >
+                    <span className="outline-marker">{completed ? "✓" : index + 1}</span>
+                    <span className="outline-copy">
+                      <strong>{label}</strong>
+                      {ingredient && (
+                        <small>
+                          {ingredient.quantity}
+                          {ingredient.form ? ` · ${ingredient.form}` : ""}
+                        </small>
+                      )}
+                      {current && <small>{step.instruction}</small>}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+            <li>
+              <button
+                type="button"
+                className="outline-step section-jump"
+                onClick={() => void jumpToRunStage("cook")}
+              >
+                <span className="outline-marker">C</span>
+                <span className="outline-copy">
+                  <strong>Cooking</strong>
+                  <small>Jump to Cook 1</small>
+                </span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className="outline-step section-jump"
+                onClick={openRunResults}
+              >
+                <span className="outline-marker">R</span>
+                <span className="outline-copy">
+                  <strong>Results</strong>
+                  <small>Review result markers</small>
+                </span>
+              </button>
+            </li>
+          </ol>
+        ) : (
+          <ol className="run-outline cook-outline">
+            <li>
+              <button
+                type="button"
+                className="outline-step section-jump"
+                onClick={() => void jumpToRunStage("prep")}
+              >
+                <span className="outline-marker">P</span>
+                <span className="outline-copy">
+                  <strong>Prep</strong>
+                  <small>Jump to Prep 1</small>
+                </span>
+              </button>
+            </li>
+            {cookSteps.map((step, index) => {
+              const globalIndex = runSteps.findIndex((item) => item.key === step.key);
+              const current = step.key === currentRunStep?.key;
+              const completed = completedStepKeys.has(step.key);
+
+              return (
+                <li key={step.key}>
+                  <button
+                    type="button"
+                    className={[
+                      "outline-step",
+                      current ? "current" : "",
+                      completed ? "completed" : ""
+                    ].filter(Boolean).join(" ")}
+                    aria-current={current ? "step" : undefined}
+                    onClick={() => void moveStep(globalIndex)}
+                  >
+                    <span className="outline-marker">{completed ? "✓" : index + 1}</span>
+                    <span className="outline-copy">
+                      <strong>Step {index + 1}</strong>
+                      <small>{current ? step.instruction : excerpt(step.instruction)}</small>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+            <li>
+              <button
+                type="button"
+                className="outline-step section-jump"
+                onClick={openRunResults}
+              >
+                <span className="outline-marker">R</span>
+                <span className="outline-copy">
+                  <strong>Results</strong>
+                  <small>Review result markers</small>
+                </span>
+              </button>
+            </li>
+          </ol>
+        )}
+      </aside>
+    );
+
     return (
       <main className="shell cook-shell">
         <header className="compact-header">
@@ -1068,7 +1260,16 @@ export function App() {
             <p className="eyebrow">Cook Mode</p>
             <h1>{recipe.title}</h1>
           </div>
-          <span className="run-badge">Run active</span>
+          <div className="run-header-actions">
+            <button
+              type="button"
+              className="text-button danger-text"
+              onClick={() => void cancelRun()}
+            >
+              Cancel Run
+            </button>
+            <span className="run-badge">Run active</span>
+          </div>
         </header>
 
         {error && <p className="error" role="alert">{error}</p>}
@@ -1076,14 +1277,114 @@ export function App() {
         {!finishing ? (
           <div className="cook-layout">
             <div className="cook-main">
-            <section className="cook-stage" aria-labelledby="current-step">
-              <p className="step-count">
-                {currentRunStep?.stage === "prep" ? "Prep" : "Cook"} {stageIndex} of {stageTotal}
-                {currentRunStep?.stageKey ? ` · ${currentRunStep.stageKey}` : ""}
-              </p>
-              <h2 id="current-step">{currentRunStep?.instruction}</h2>
+              <section className="cook-stage" aria-labelledby="current-step">
+                <p className="step-count">
+                  {currentRunStep?.stage === "prep" ? "Prep" : "Cook"} {stageIndex} of {stageTotal}
+                  {currentRunStep?.stageKey ? ` · ${currentRunStep.stageKey}` : ""}
+                </p>
+                <h2 id="current-step">{currentRunStep?.instruction}</h2>
 
-              <div className="step-actions">
+                <div className="step-actions">
+                  <button
+                    className="secondary"
+                    disabled={currentStepIndex === 0}
+                    onClick={() => void moveStep(currentStepIndex - 1)}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    disabled={currentStepIndex === runSteps.length - 1}
+                    onClick={() => void advanceStep()}
+                  >
+                    Next step
+                  </button>
+                </div>
+              </section>
+
+              <section className="panel" aria-labelledby="what-happened">
+                <p className="eyebrow">Reality differs sometimes</p>
+                <h2 id="what-happened">What happened?</h2>
+                <p>
+                  Record the thing that matters. This becomes evidence for this Cook Run;
+                  it does not silently rewrite the recipe.
+                </p>
+
+                <div className="run-change-actions" role="group" aria-label="Record a Cook Run change">
+                  {runChangeActions.map((action) => (
+                    <button
+                      key={action.type}
+                      type="button"
+                      className={eventType === action.type ? "change-action active" : "change-action"}
+                      aria-pressed={eventType === action.type}
+                      onClick={() => setEventType(action.type)}
+                    >
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+
+                {editingEventId && (
+                  <div className="editing-note-banner">
+                    <span>Editing note from {runStepLabel(editingRunStepKey)}</span>
+                    <button type="button" className="text-button" onClick={cancelEventEdit}>
+                      Cancel edit
+                    </button>
+                  </div>
+                )}
+
+                <label>
+                  {runChangeActions.find((action) => action.type === eventType)?.prompt ?? "What happened?"}
+                  <textarea
+                    aria-label="Change details"
+                    value={eventText}
+                    onChange={(event) => setEventText(event.target.value)}
+                    placeholder={
+                      runChangeActions.find((action) => action.type === eventType)?.placeholder ??
+                      "Describe what changed."
+                    }
+                    rows={3}
+                  />
+                </label>
+
+                <button onClick={() => void saveEvent()} disabled={!eventText.trim()}>
+                  {editingEventId
+                    ? "Save note changes"
+                    : `Record ${runChangeLabel(eventType).toLowerCase()}`}
+                </button>
+
+                {runEvents.length > 0 && (
+                  <div className="event-log" aria-label="Cook Run observations">
+                    <h3>Run notes</h3>
+                    {runEvents.map((event) => (
+                      <article key={event.id}>
+                        <div className="event-log-meta">
+                          <span>{runChangeLabel(event.eventType)}</span>
+                          <span>{runStepLabel(event.runStepKey)}</span>
+                        </div>
+                        <p>{event.text}</p>
+                        <div className="event-log-actions">
+                          <button
+                            type="button"
+                            className="text-button"
+                            onClick={() => editEvent(event)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="text-button danger-text"
+                            onClick={() => void deleteEvent(event)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <div className="step-actions step-actions-after-notes" aria-label="Cook Run navigation after notes">
                 <button
                   className="secondary"
                   disabled={currentStepIndex === 0}
@@ -1098,256 +1399,81 @@ export function App() {
                   Next step
                 </button>
               </div>
-            </section>
 
-            <section className="panel" aria-labelledby="what-happened">
-              <p className="eyebrow">Reality differs sometimes</p>
-              <h2 id="what-happened">What happened?</h2>
-              <p>
-                Record the thing that matters. This becomes evidence for this Cook Run;
-                it does not silently rewrite the recipe.
-              </p>
-
-              <div className="run-change-actions" role="group" aria-label="Record a Cook Run change">
-                {runChangeActions.map((action) => (
-                  <button
-                    key={action.type}
-                    type="button"
-                    className={eventType === action.type ? "change-action active" : "change-action"}
-                    aria-pressed={eventType === action.type}
-                    onClick={() => setEventType(action.type)}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-
-              {editingEventId && (
-                <div className="editing-note-banner">
-                  <span>Editing note from {runStepLabel(editingRunStepKey)}</span>
-                  <button type="button" className="text-button" onClick={cancelEventEdit}>
-                    Cancel edit
-                  </button>
-                </div>
-              )}
-
-              <label>
-                {runChangeActions.find((action) => action.type === eventType)?.prompt ?? "What happened?"}
-                <textarea
-                  aria-label="Change details"
-                  value={eventText}
-                  onChange={(event) => setEventText(event.target.value)}
-                  placeholder={
-                    runChangeActions.find((action) => action.type === eventType)?.placeholder ??
-                    "Describe what changed."
-                  }
-                  rows={3}
-                />
-              </label>
-
-              <button onClick={() => void saveEvent()} disabled={!eventText.trim()}>
-                {editingEventId
-                  ? "Save note changes"
-                  : `Record ${runChangeLabel(eventType).toLowerCase()}`}
-              </button>
-
-              {runEvents.length > 0 && (
-                <div className="event-log" aria-label="Cook Run observations">
-                  <h3>Run notes</h3>
-                  {runEvents.map((event) => (
-                    <article key={event.id}>
-                      <div className="event-log-meta">
-                        <span>{runChangeLabel(event.eventType)}</span>
-                        <span>{runStepLabel(event.runStepKey)}</span>
-                      </div>
-                      <p>{event.text}</p>
-                      <div className="event-log-actions">
-                        <button
-                          type="button"
-                          className="text-button"
-                          onClick={() => editEvent(event)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="text-button danger-text"
-                          onClick={() => void deleteEvent(event)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <div className="step-actions step-actions-after-notes" aria-label="Cook Run navigation after notes">
-              <button
-                className="secondary"
-                disabled={currentStepIndex === 0}
-                onClick={() => void moveStep(currentStepIndex - 1)}
-              >
-                Previous
-              </button>
-              <button
-                disabled={currentStepIndex === runSteps.length - 1}
-                onClick={() => void advanceStep()}
-              >
-                Next step
+              <button className="finish-button" onClick={openRunResults}>
+                Finish Cook Run
               </button>
             </div>
 
-            <button className="finish-button" onClick={() => setFinishing(true)}>
-              Finish Cook Run
-            </button>
-            </div>
-
-            <aside className="panel cook-context" aria-label="Recipe context">
-              <p className="eyebrow">Recipe progress</p>
-              {currentRunStep?.stage === "prep" ? (
-                <>
-                  <h2>Prep ingredients</h2>
-                  <ol className="run-outline prep-outline">
-                    {prepSteps.map((step, index) => {
-                      const globalIndex = runSteps.findIndex((item) => item.key === step.key);
-                      const ingredientId =
-                        step.ingredientId ?? fallbackPrepIngredientIds[step.key];
-                      const ingredient = activeRun.snapshot?.configuredIngredients.find(
-                        (item) => item.id === ingredientId
-                      );
-                      const label =
-                        step.label ??
-                        ingredient?.name ??
-                        step.key.replace(/^prep-/, "").replace(/-/g, " ");
-                      const current = step.key === currentRunStep.key;
-                      const completed = completedStepKeys.has(step.key);
-
-                      return (
-                        <li key={step.key}>
-                          <button
-                            type="button"
-                            className={[
-                              "outline-step",
-                              current ? "current" : "",
-                              completed ? "completed" : ""
-                            ].filter(Boolean).join(" ")}
-                            aria-current={current ? "step" : undefined}
-                            onClick={() => void moveStep(globalIndex)}
-                          >
-                            <span className="outline-marker">{completed ? "✓" : index + 1}</span>
-                            <span className="outline-copy">
-                              <strong>{label}</strong>
-                              {ingredient && (
-                                <small>
-                                  {ingredient.quantity}
-                                  {ingredient.form ? ` · ${ingredient.form}` : ""}
-                                </small>
-                              )}
-                              {current && <small>{step.instruction}</small>}
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </>
-              ) : (
-                <>
-                  <h2>Cooking steps</h2>
-                  <ol className="run-outline cook-outline">
-                    {cookSteps.map((step, index) => {
-                      const globalIndex = runSteps.findIndex((item) => item.key === step.key);
-                      const current = step.key === currentRunStep?.key;
-                      const completed = completedStepKeys.has(step.key);
-
-                      return (
-                        <li key={step.key}>
-                          <button
-                            type="button"
-                            className={[
-                              "outline-step",
-                              current ? "current" : "",
-                              completed ? "completed" : ""
-                            ].filter(Boolean).join(" ")}
-                            aria-current={current ? "step" : undefined}
-                            onClick={() => void moveStep(globalIndex)}
-                          >
-                            <span className="outline-marker">{completed ? "✓" : index + 1}</span>
-                            <span className="outline-copy">
-                              <strong>Step {index + 1}</strong>
-                              <small>{current ? step.instruction : excerpt(step.instruction)}</small>
-                            </span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                </>
-              )}
-            </aside>
+            {renderRunPlan()}
           </div>
         ) : (
-          <section className="panel results-panel" aria-labelledby="result-check">
-            <p className="eyebrow">Compare with the goal</p>
-            <h2 id="result-check">How did this run turn out?</h2>
-            <p>
-              One mixed result does not make the whole recipe a failure. Record each
-              dimension independently.
-            </p>
+          <div className="cook-layout">
+            <div className="cook-main">
+              <section className="panel results-panel" aria-labelledby="result-check">
+                <p className="eyebrow">Compare with the goal</p>
+                <h2 id="result-check">How did this run turn out?</h2>
+                <p>
+                  One mixed result does not make the whole recipe a failure. Record each
+                  dimension independently.
+                </p>
 
-            <div className="result-list">
-              {recipe.resultMarkers.map((marker) => (
-                <fieldset key={marker.id}>
-                  <legend>{marker.label}</legend>
-                  {marker.description && <p>{marker.description}</p>}
-                  <label>
-                    Outcome
-                    <select
-                      aria-label={`${marker.label} outcome`}
-                      value={resultValues[marker.id] ?? "not-observed"}
-                      onChange={(event) =>
-                        setResultValues({
-                          ...resultValues,
-                          [marker.id]: event.target.value as ResultOutcome
-                        })
-                      }
-                    >
-                      <option value="hit">Hit</option>
-                      <option value="mixed">Mixed / could improve</option>
-                      <option value="miss">Miss</option>
-                      <option value="not-observed">Not observed</option>
-                    </select>
-                  </label>
-                  <label>
-                    Note
-                    <input
-                      aria-label={`${marker.label} note`}
-                      value={resultNotes[marker.id] ?? ""}
-                      onChange={(event) =>
-                        setResultNotes({
-                          ...resultNotes,
-                          [marker.id]: event.target.value
-                        })
-                      }
-                    />
-                  </label>
-                </fieldset>
-              ))}
+                <div className="result-list">
+                  {recipe.resultMarkers.map((marker) => (
+                    <fieldset key={marker.id} id={`active-result-${marker.id}`}>
+                      <legend>{marker.label}</legend>
+                      {marker.description && <p>{marker.description}</p>}
+                      <label>
+                        Outcome
+                        <select
+                          aria-label={`${marker.label} outcome`}
+                          value={resultValues[marker.id] ?? "not-observed"}
+                          onChange={(event) =>
+                            setResultValues({
+                              ...resultValues,
+                              [marker.id]: event.target.value as ResultOutcome
+                            })
+                          }
+                        >
+                          <option value="hit">Hit</option>
+                          <option value="mixed">Mixed / could improve</option>
+                          <option value="miss">Miss</option>
+                          <option value="not-observed">Not observed</option>
+                        </select>
+                      </label>
+                      <label>
+                        Note
+                        <input
+                          aria-label={`${marker.label} note`}
+                          value={resultNotes[marker.id] ?? ""}
+                          onChange={(event) =>
+                            setResultNotes({
+                              ...resultNotes,
+                              [marker.id]: event.target.value
+                            })
+                          }
+                        />
+                      </label>
+                    </fieldset>
+                  ))}
+                </div>
+
+                <div className="step-actions">
+                  <button className="secondary" onClick={() => setFinishing(false)}>
+                    Back to cooking
+                  </button>
+                  <button onClick={() => void finishRun()}>Save results</button>
+                </div>
+              </section>
             </div>
 
-            <div className="step-actions">
-              <button className="secondary" onClick={() => setFinishing(false)}>
-                Back to cooking
-              </button>
-              <button onClick={() => void finishRun()}>Save results</button>
-            </div>
-          </section>
+            {renderRunPlan()}
+          </div>
         )}
       </main>
     );
   }
+
 
   const isDraft = recipe.status === "draft";
   const isTested = recipe.status === "tested";
