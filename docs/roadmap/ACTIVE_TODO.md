@@ -147,11 +147,26 @@ Completed Cook Run correction interface implemented and validated:
 - corrections update Cook Run evidence only and do not rewrite the frozen Recipe snapshot;
 - automated browser coverage proves the submitted-run editor path end to end.
 
+Final owner-review usability pass before merge preparation:
+
+- completed-run notes render as full readable text;
+- completed-run note editing happens **in place**, inside the note's chronological/step position;
+- clicking a Run Plan step while editing a completed run opens a blank inline note at that step, after existing notes for that step and before notes from the next step;
+- completed-run Run Plan remains sticky and viewport-height on wide layouts;
+- **Results** is the final Run Plan section and jumps to the result markers;
+- active Cook Mode consistently labels the rail **Run Plan**;
+- active Run Plan always exposes section navigation:
+  - Prep view shows Prep steps, then Cooking, then Results;
+  - Cooking view shows Prep first, then Cook steps, then Results;
+  - Results view keeps Prep / Cooking / Results navigation available;
+- Cancel Cook Run requires explicit confirmation and transitions the run to preserved `abandoned` state rather than deleting its snapshot/notes;
+- validate all above, then prepare the branch/PR for merge to `main` without merging until Jim approves.
+
 Next gate under this same lock:
 
-- owner browser review of desktop and mobile/kitchen-scale behavior, including editing the already-submitted soup run;
-- reconcile owner findings;
-- only then resume Recipe 0002 evidence/status reconciliation.
+- owner browser approval of this final usability pass;
+- prepare merge summary and confirm PR/main readiness;
+- merge only on Jim's explicit approval.
 
 ### Supporting UX owner
 
