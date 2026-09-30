@@ -581,7 +581,7 @@ button:disabled {
 .cook-context {
   position: sticky;
   top: 1rem;
-  max-height: calc(100vh - 2rem);
+  height: calc(100vh - 2rem);
   overflow: auto;
 }
 
@@ -688,7 +688,7 @@ button:disabled {
 .completed-run-plan {
   position: sticky;
   top: 1rem;
-  max-height: calc(100vh - 2rem);
+  height: calc(100vh - 2rem);
   overflow: auto;
 }
 
@@ -728,5 +728,123 @@ button:disabled {
   .history-run-header {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+
+
+.run-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.run-transcript-step {
+  padding: 1rem 0;
+  border-top: 1px solid #ece8de;
+  scroll-margin-top: 1rem;
+}
+
+.run-transcript-step-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.run-transcript-step-heading > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.run-transcript-step-heading span {
+  color: #66775d;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.run-note-card {
+  padding: 0.9rem;
+  border: 1px solid #e3ddd0;
+  border-radius: 0.75rem;
+  background: #fffefa;
+}
+
+.run-note-card + .run-note-card {
+  margin-top: 0.65rem;
+}
+
+.run-note-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+.inline-note-editor {
+  margin-top: 0.4rem;
+}
+
+.draft-note-card {
+  margin-top: 0.75rem;
+  border-style: dashed;
+  background: #f8f7f1;
+}
+
+.muted-note {
+  color: #6d746c;
+  font-style: italic;
+}
+
+.section-jump {
+  margin-top: 0.5rem;
+  border-style: dashed;
+}
+
+.result-outline-item {
+  padding-left: 2.4rem;
+}
+
+.result-outline-link {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  color: #304f3c;
+  background: transparent;
+  border: 0;
+}
+
+.result-outline-link:hover {
+  text-decoration: underline;
+}
+
+.history-run-title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .cook-context,
+  .completed-run-plan {
+    position: static;
+    height: auto;
+    max-height: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .run-transcript-step-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .run-header-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
