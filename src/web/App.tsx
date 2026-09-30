@@ -581,6 +581,7 @@ export function App() {
       setEventText("");
       setEditingEventId(null);
       setEditingRunStepKey(null);
+      setCompletedRunEventStepKey("");
       setEventType("observation");
       await refreshRun();
     } catch (cause) {
@@ -589,6 +590,7 @@ export function App() {
   }
 
   function editEvent(event: RunEvent) {
+    setCompletedRunEventStepKey("");
     setEditingEventId(event.id);
     setEditingRunStepKey(event.runStepKey ?? null);
     setEventType(event.eventType);
@@ -598,6 +600,7 @@ export function App() {
   function cancelEventEdit() {
     setEditingEventId(null);
     setEditingRunStepKey(null);
+    setCompletedRunEventStepKey("");
     setEventType("observation");
     setEventText("");
   }
