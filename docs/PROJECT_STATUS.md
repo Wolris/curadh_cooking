@@ -67,7 +67,7 @@ Cook Mode is a core product direction. MVP should first support structured recip
 
 ## Current execution lock
 
-Owner-review implementation for the configurable Cook Mode is now at the **manual browser review gate**.
+Owner-review implementation for the configurable Cook Mode is now **merge-ready pending Jim's final browser/experience approval**.
 
 Implemented and automated:
 
@@ -85,18 +85,29 @@ Implemented and automated:
 
 Full TypeScript/API/build/browser validation passes on the combined implementation.
 
-Completed-run correction is now implemented and fully validated:
+Completed-run correction and the final usability pass are implemented and fully validated:
 
 - Recent Cook Runs -> Edit run;
-- correct/add/delete step-bound notes after submission;
-- revise submitted result markers;
-- preserve completed status, timestamps, and frozen run plan.
+- full run-note text remains readable;
+- note edits happen inline at the step where the evidence lives;
+- clicking a completed-run Run Plan step opens a blank inline note at that point;
+- sticky viewport-height Run Plan with Results as the final section;
+- active Run Plan supports Prep / Cooking / Results section jumps plus direct step navigation;
+- cancelled runs require confirmation, preserve their evidence, and remain reachable in history;
+- submitted result markers remain correctable without reopening the run;
+- completed/cancelled state and frozen snapshots remain preserved.
 
-Next gate:
+Full TypeScript/API/unit/build/browser validation passes on the final implementation.
 
-- Jim desktop + mobile/kitchen-scale browser review, including correction of the already-submitted soup run;
-- reconcile review findings;
-- then resume Recipe 0002 evidence/status reconciliation.
+Merge preparation:
+
+1. Jim performs final desktop/mobile browser review and explicitly approves merge.
+2. Merge PR #1 to `main`.
+3. Retarget stacked PR #2 to `main`.
+4. Reverify PR #2 diff and CI.
+5. Merge PR #2 only with Jim's explicit approval.
+
+After landing, Recipe 0002 remains Draft until its existing Cook Run evidence is reconciled and status promotion is explicitly approved.
 
 Canonical design detail is in Design Bible §§12–14 and `docs/design/COOK_RUN_UX_DEFINITION.md`.
 
