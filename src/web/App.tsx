@@ -377,7 +377,7 @@ export function App() {
         }));
 
       setCompletedRunEdit(run);
-      setCompletedRunEventStepKey(steps[0]?.key ?? "");
+      setCompletedRunEventStepKey("");
       setCompletedResultValues(
         Object.fromEntries(
           recipe.resultMarkers.map((marker) => [
