@@ -1011,6 +1011,7 @@ export function App() {
                   <button
                     type="button"
                     className="outline-step"
+                    aria-label={`${runStepLabel(step.key)} - add note`}
                     onClick={() => beginCompletedStepNote(step.key)}
                   >
                     <span className="outline-marker">{index + 1}</span>
@@ -1026,6 +1027,7 @@ export function App() {
                   <button
                     type="button"
                     className="outline-step section-jump"
+                    aria-label="Results section"
                     onClick={jumpToCompletedResults}
                   >
                     <span className="outline-marker">✓</span>
@@ -1073,6 +1075,7 @@ export function App() {
               <button
                 type="button"
                 className="outline-step section-jump"
+                aria-label="Prep section"
                 onClick={() => void jumpToRunStage("prep")}
               >
                 <span className="outline-marker">P</span>
@@ -1086,6 +1089,7 @@ export function App() {
               <button
                 type="button"
                 className="outline-step section-jump"
+                aria-label="Cooking section"
                 onClick={() => void jumpToRunStage("cook")}
               >
                 <span className="outline-marker">C</span>
@@ -1099,6 +1103,7 @@ export function App() {
               <button
                 type="button"
                 className="outline-step section-jump current"
+                aria-label="Results section"
                 aria-current="step"
                 onClick={openRunResults}
               >
@@ -1151,6 +1156,7 @@ export function App() {
                       completed ? "completed" : ""
                     ].filter(Boolean).join(" ")}
                     aria-current={current ? "step" : undefined}
+                    aria-label={`Prep step ${index + 1}: ${label}`}
                     onClick={() => void moveStep(globalIndex)}
                   >
                     <span className="outline-marker">{completed ? "✓" : index + 1}</span>
@@ -1172,6 +1178,7 @@ export function App() {
               <button
                 type="button"
                 className="outline-step section-jump"
+                aria-label="Cooking section"
                 onClick={() => void jumpToRunStage("cook")}
               >
                 <span className="outline-marker">C</span>
@@ -1185,6 +1192,7 @@ export function App() {
               <button
                 type="button"
                 className="outline-step section-jump"
+                aria-label="Results section"
                 onClick={openRunResults}
               >
                 <span className="outline-marker">R</span>
@@ -1201,6 +1209,7 @@ export function App() {
               <button
                 type="button"
                 className="outline-step section-jump"
+                aria-label="Prep section"
                 onClick={() => void jumpToRunStage("prep")}
               >
                 <span className="outline-marker">P</span>
@@ -1225,6 +1234,7 @@ export function App() {
                       completed ? "completed" : ""
                     ].filter(Boolean).join(" ")}
                     aria-current={current ? "step" : undefined}
+                    aria-label={`Cook step ${index + 1}`}
                     onClick={() => void moveStep(globalIndex)}
                   >
                     <span className="outline-marker">{completed ? "✓" : index + 1}</span>
@@ -1240,6 +1250,7 @@ export function App() {
               <button
                 type="button"
                 className="outline-step section-jump"
+                aria-label="Results section"
                 onClick={openRunResults}
               >
                 <span className="outline-marker">R</span>
