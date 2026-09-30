@@ -53,7 +53,7 @@ test("Recipe 0001 can create a Cook Run, record reality, and save independent re
 
   const completedRunPlan = page.getByLabel("Run Plan");
   await expect(completedRunPlan.getByRole("heading", { name: "Run Plan" })).toBeVisible();
-  await completedRunPlan.getByRole("button", { name: /Cook 1/ }).click();
+  await completedRunPlan.getByRole("button", { name: "Cook 1 - add note" }).click();
   await expect(page.getByLabel("Completed run change details")).toBeVisible();
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
 
@@ -79,7 +79,7 @@ test("Recipe 0001 can create a Cook Run, record reality, and save independent re
     page.getByLabel("Completed Cook Run notes").getByText("Amount", { exact: true })
   ).toBeVisible();
 
-  await completedRunPlan.getByRole("button", { name: /Results/ }).click();
+  await completedRunPlan.getByRole("button", { name: "Results section" }).click();
   await expect(page.getByRole("heading", { name: "Result markers" })).toBeVisible();
 
   await page.getByLabel("Completed Height / rise outcome").selectOption("hit");
@@ -138,8 +138,8 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
 
   const recipeContext = page.getByLabel("Run Plan");
   await expect(recipeContext.getByRole("heading", { name: "Run Plan" })).toBeVisible();
-  await expect(recipeContext.getByRole("button", { name: /Cooking/ })).toBeVisible();
-  await expect(recipeContext.getByRole("button", { name: /Results/ })).toBeVisible();
+  await expect(recipeContext.getByRole("button", { name: "Cooking section" })).toBeVisible();
+  await expect(recipeContext.getByRole("button", { name: "Results section" })).toBeVisible();
   await expect(recipeContext.getByRole("button", { name: /Carrots/ })).toHaveClass(/current/);
 
   await page.getByRole("button", { name: "View Recipe" }).click();
@@ -206,18 +206,18 @@ test("Recipe 0002 renders the Instant Pot + Cuisinart draft", async ({ page }) =
 
   const cookContext = page.getByLabel("Run Plan");
   await expect(cookContext.getByRole("heading", { name: "Run Plan" })).toBeVisible();
-  await cookContext.getByRole("button", { name: /Step 2/ }).click();
+  await cookContext.getByRole("button", { name: "Cook step 2" }).click();
   await expect(page.getByText(/^Cook 2 of/)).toBeVisible();
 
-  await cookContext.getByRole("button", { name: /^Prep/ }).click();
+  await cookContext.getByRole("button", { name: "Prep section" }).click();
   await expect(page.getByText(/^Prep 1 of/)).toBeVisible();
 
   const prepPlanAgain = page.getByLabel("Run Plan");
-  await prepPlanAgain.getByRole("button", { name: /Cooking/ }).click();
+  await prepPlanAgain.getByRole("button", { name: "Cooking section" }).click();
   await expect(page.getByText(/^Cook 1 of/)).toBeVisible();
 
   const cookingPlanAgain = page.getByLabel("Run Plan");
-  await cookingPlanAgain.getByRole("button", { name: /Results/ }).click();
+  await cookingPlanAgain.getByRole("button", { name: "Results section" }).click();
   await expect(page.getByRole("heading", { name: "How did this run turn out?" })).toBeVisible();
 
   page.once("dialog", async (dialog) => {
