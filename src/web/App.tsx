@@ -827,7 +827,7 @@ export function App() {
           >
             {editingEventId
               ? "Save note changes"
-              : \`Add \${runChangeLabel(eventType).toLowerCase()} note\`}
+              : `Add ${runChangeLabel(eventType).toLowerCase()} note`}
           </button>
           <button type="button" className="text-button" onClick={cancelEventEdit}>
             Cancel
@@ -873,7 +873,7 @@ export function App() {
                 return (
                   <section
                     key={step.key}
-                    id={\`completed-step-\${step.key}\`}
+                    id={`completed-step-${step.key}`}
                     className="run-transcript-step"
                   >
                     <div className="run-transcript-step-heading">
@@ -894,7 +894,7 @@ export function App() {
                       <p className="muted-note">No run notes recorded for this step.</p>
                     )}
 
-                    <div className="event-log" aria-label={\`Notes for \${runStepLabel(step.key)}\`}>
+                    <div className="event-log" aria-label={`Notes for ${runStepLabel(step.key)}`}>
                       {events.map((event) => (
                         <article key={event.id} className="run-note-card">
                           {editingEventId === event.id ? (
@@ -950,13 +950,13 @@ export function App() {
 
                 <div className="result-list">
                   {recipe.resultMarkers.map((marker) => (
-                    <fieldset key={marker.id} id={\`completed-result-\${marker.id}\`}>
+                    <fieldset key={marker.id} id={`completed-result-${marker.id}`}>
                       <legend>{marker.label}</legend>
                       {marker.description && <p>{marker.description}</p>}
                       <label>
                         Outcome
                         <select
-                          aria-label={\`Completed \${marker.label} outcome\`}
+                          aria-label={`Completed ${marker.label} outcome`}
                           value={completedResultValues[marker.id] ?? "not-observed"}
                           onChange={(event) =>
                             setCompletedResultValues({
@@ -974,7 +974,7 @@ export function App() {
                       <label>
                         Note
                         <input
-                          aria-label={\`Completed \${marker.label} note\`}
+                          aria-label={`Completed ${marker.label} note`}
                           value={completedResultNotes[marker.id] ?? ""}
                           onChange={(event) =>
                             setCompletedResultNotes({
