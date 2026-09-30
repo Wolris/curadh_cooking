@@ -57,27 +57,22 @@ test("Recipe 0001 can create a Cook Run, record reality, and save independent re
   await expect(page.getByLabel("Completed run change details")).toBeVisible();
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
 
-  await expect(
-    page.getByLabel("Completed Cook Run notes").getByText(
-      "Batter is thicker than the last time, but still cohesive."
-    )
-  ).toBeVisible();
-
-  await page.getByLabel("Completed Cook Run notes").getByRole("button", { name: "Edit" }).click();
+  const completedNote = page.locator(".run-note-card").filter({
+    hasText: "Batter is thicker than the last time, but still cohesive."
+  });
+  await expect(completedNote).toBeVisible();
+  await completedNote.getByRole("button", { name: "Edit" }).click();
   await page.getByRole("button", { name: "Amount", exact: true }).click();
   await page.getByLabel("Completed run change details").fill(
     "Used a little less liquid than planned."
   );
   await page.getByRole("button", { name: "Save note changes" }).click();
 
-  await expect(
-    page.getByLabel("Completed Cook Run notes").getByText(
-      "Used a little less liquid than planned."
-    )
-  ).toBeVisible();
-  await expect(
-    page.getByLabel("Completed Cook Run notes").getByText("Amount", { exact: true })
-  ).toBeVisible();
+  const correctedNote = page.locator(".run-note-card").filter({
+    hasText: "Used a little less liquid than planned."
+  });
+  await expect(correctedNote).toBeVisible();
+  await expect(correctedNote.getByText("Amount", { exact: true })).toBeVisible();
 
   await completedRunPlan.getByRole("button", { name: "Results section" }).click();
   await expect(page.getByRole("heading", { name: "Result markers" })).toBeVisible();
