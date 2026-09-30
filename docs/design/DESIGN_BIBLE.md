@@ -747,3 +747,39 @@ A completed Cook Run must support a dedicated **Edit run** experience that:
 A completed run is not “reopened” for cooking merely because its evidence is corrected.
 
 This is important because post-run reflection often reveals classification or transcription mistakes immediately after submission. The product should make correction easier than recreating the Cook Run or silently tolerating bad evidence.
+
+
+### Run Plan navigation and cancellation
+
+The right-side execution context is consistently named **Run Plan**.
+
+For an active run:
+
+- Prep view shows the Prep steps, followed by section navigation to **Cooking** and **Results**.
+- Cooking view shows **Prep** first, then the cooking-step outline, and **Results** last.
+- Results view keeps section navigation back to Prep and Cooking and identifies Results as the current section.
+- Selecting Prep or Cooking jumps to the first step of that section.
+- Selecting Results opens/jumps to the result-marker section.
+
+For completed-run evidence editing:
+
+- the Run Plan remains interactive;
+- selecting a Prep/Cook step opens an empty inline note at that step's position in the evidence stream;
+- notes are read in run-step order and remain fully readable when not being edited;
+- editing happens inline where the note lives, not in a detached form elsewhere on the page;
+- Results is the final Run Plan section and jumps to the result markers.
+
+On wide layouts the Run Plan is sticky and uses the available viewport height with its own overflow as needed.
+
+### Cancelling an active Cook Run
+
+An active Cook Run may be cancelled only after an explicit **Are you sure?** confirmation.
+
+Cancellation:
+
+- does not delete the Cook Run;
+- preserves the frozen run snapshot, recorded notes, and progress;
+- changes the run out of active recovery state into the preserved abandoned/cancelled state;
+- returns the user to the recipe context.
+
+Cancel is distinct from Finish Cook Run. Finishing records results; cancelling stops the execution without pretending it was completed.
