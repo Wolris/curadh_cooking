@@ -147,26 +147,34 @@ Completed Cook Run correction interface implemented and validated:
 - corrections update Cook Run evidence only and do not rewrite the frozen Recipe snapshot;
 - automated browser coverage proves the submitted-run editor path end to end.
 
-Final owner-review usability pass before merge preparation:
+Final owner-review usability pass — **IMPLEMENTED / AUTOMATED PASS**:
 
 - completed-run notes render as full readable text;
 - completed-run note editing happens **in place**, inside the note's chronological/step position;
-- clicking a Run Plan step while editing a completed run opens a blank inline note at that step, after existing notes for that step and before notes from the next step;
-- completed-run Run Plan remains sticky and viewport-height on wide layouts;
-- **Results** is the final Run Plan section and jumps to the result markers;
+- clicking a Run Plan step while editing a completed run opens a blank inline note after existing notes for that step and before notes from the next step;
+- completed-run Run Plan is sticky and viewport-height on wide layouts;
+- **Results** is the final completed-run Run Plan section and jumps to result markers;
 - active Cook Mode consistently labels the rail **Run Plan**;
-- active Run Plan always exposes section navigation:
-  - Prep view shows Prep steps, then Cooking, then Results;
-  - Cooking view shows Prep first, then Cook steps, then Results;
-  - Results view keeps Prep / Cooking / Results navigation available;
-- Cancel Cook Run requires explicit confirmation and transitions the run to preserved `abandoned` state rather than deleting its snapshot/notes;
-- validate all above, then prepare the branch/PR for merge to `main` without merging until Jim approves.
+- active Run Plan exposes Prep / Cooking / Results section navigation and direct step navigation;
+- Results view retains Run Plan access to Prep, Cooking, and individual result markers;
+- Cancel Cook Run requires explicit confirmation and preserves the run as `abandoned` rather than deleting snapshot/progress/notes;
+- cancelled runs remain reachable in Recent Cook Runs for evidence review/correction;
+- explicit accessible names cover Run Plan step/section controls;
+- TypeScript, API/unit, production build, and browser vertical-slice validation all pass on the final implementation.
 
-Next gate under this same lock:
+### MERGE PREPARATION GATE
 
-- owner browser approval of this final usability pass;
-- prepare merge summary and confirm PR/main readiness;
-- merge only on Jim's explicit approval.
+The implementation is merge-ready **pending Jim's browser/experience approval**.
+
+Required landing order:
+
+1. Jim reviews the final branch in-browser and explicitly approves merge.
+2. Merge PR #1 (`feature/recipe-0001-v1`) into `main`.
+3. Retarget PR #2 from `feature/recipe-0001-v1` to `main`.
+4. Verify PR #2 diff/CI after retarget.
+5. Merge PR #2 only on Jim's explicit approval.
+
+Do not merge or retarget ahead of the owner approval gate.
 
 ### Supporting UX owner
 
