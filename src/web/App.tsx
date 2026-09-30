@@ -864,7 +864,11 @@ export function App() {
 
         <div className="completed-run-editor">
           <div>
-            <section className="panel run-transcript" aria-labelledby="completed-run-notes">
+            <section
+              className="panel run-transcript"
+              aria-labelledby="completed-run-notes"
+              aria-label="Completed Cook Run notes"
+            >
               <p className="eyebrow">What actually happened</p>
               <h2 id="completed-run-notes">Run notes</h2>
               <p>Read the full run in order. Add or edit evidence exactly where it happened.</p>
