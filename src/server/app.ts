@@ -543,7 +543,7 @@ export function buildServer(options: BuildServerOptions = {}) {
       SELECT variant_id AS variantId,
              configuration_snapshot_json AS snapshotJson
       FROM cook_runs
-      WHERE id = ? AND status IN ('active', 'completed')
+      WHERE id = ? AND status IN ('active', 'completed', 'abandoned')
     `).get(request.params.id) as { variantId: string; snapshotJson?: string | null } | undefined;
 
     if (!editableRun) return reply.code(404).send({ error: "Editable Cook Run not found" });
@@ -642,6 +642,20 @@ export function buildServer(options: BuildServerOptions = {}) {
       return { ok: true };
     }
   );
+
+  app.post<{ Params: { id: string } }>("/api/cook-runs/:id/cancel", async (request, reply) => {
+    const result = db.prepare(`
+      UPDATE cook_runs
+      SET status = 'abandoned'
+      WHERE id = ? AND status = 'active'
+    `).run(request.params.id);
+
+    if (!result.changes) {
+      return reply.code(404).send({ error: "Active Cook Run not found" });
+    }
+
+    return { ok: true, status: "abandoned" };
+  });
 
   app.put<{ Params: { id: string } }>("/api/cook-runs/:id/results", async (request, reply) => {
     const parsed = completeCookRunSchema.safeParse(request.body);
