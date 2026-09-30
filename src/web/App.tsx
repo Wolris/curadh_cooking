@@ -287,8 +287,11 @@ export function App() {
     );
   }, [recipe?.id]);
 
-  const completedRuns = useMemo(
-    () => recipe?.runs.filter((run) => run.status === "completed") ?? [],
+  const historyRuns = useMemo(
+    () =>
+      recipe?.runs.filter(
+        (run) => run.status === "completed" || run.status === "abandoned"
+      ) ?? [],
     [recipe]
   );
 
@@ -618,6 +621,63 @@ export function App() {
             : current
         );
       }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
+  function beginCompletedStepNote(runStepKey: string) {
+    setCompletedRunEventStepKey(runStepKey);
+    setEditingEventId(null);
+    setEditingRunStepKey(null);
+    setEventType("observation");
+    setEventText("");
+
+    requestAnimationFrame(() => {
+      document
+        .getElementById(`completed-step-${runStepKey}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  function jumpToCompletedResults() {
+    requestAnimationFrame(() => {
+      document
+        .getElementById("completed-run-results")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  async function jumpToRunStage(stage: "prep" | "cook") {
+    const index = runSteps.findIndex((step) => step.stage === stage);
+    if (index < 0) return;
+    setFinishing(false);
+    await moveStep(index);
+  }
+
+  function openRunResults() {
+    setFinishing(true);
+    requestAnimationFrame(() => {
+      document
+        .getElementById("result-check")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  async function cancelRun() {
+    if (!recipe || !activeRun) return;
+
+    const confirmed = window.confirm(
+      "Cancel this Cook Run? Saved notes, progress, and the frozen run plan will be kept. Anything currently typed but not recorded will not be saved."
+    );
+    if (!confirmed) return;
+
+    setError(null);
+    try {
+      await requestJson(`/api/cook-runs/${activeRun.id}/cancel`, {
+        method: "POST"
+      });
+      await openRecipe(recipe.slug);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     }
