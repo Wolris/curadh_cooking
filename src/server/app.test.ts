@@ -347,6 +347,69 @@ describe("Recipe 0001 Cook Run vertical slice", () => {
     expect(afterDelete.json().events).toHaveLength(0);
   });
 
+  it("cancels an active Cook Run without deleting its saved evidence", async () => {
+    app = buildServer({ dbPath: ":memory:" });
+
+    const detailResponse = await app.inject({
+      method: "GET",
+      url: "/api/recipes/homemade-chicken-soup"
+    });
+    const recipe = detailResponse.json();
+
+    const started = await app.inject({
+      method: "POST",
+      url: "/api/cook-runs",
+      payload: {
+        recipeId: recipe.id,
+        variantId: recipe.variant.id
+      }
+    });
+    const run = started.json();
+
+    const note = await app.inject({
+      method: "POST",
+      url: `/api/cook-runs/${run.id}/events`,
+      payload: {
+        runStepKey: run.currentStepKey,
+        eventType: "observation",
+        text: "Keep this even if I cancel."
+      }
+    });
+    expect(note.statusCode).toBe(201);
+
+    const cancelled = await app.inject({
+      method: "POST",
+      url: `/api/cook-runs/${run.id}/cancel`
+    });
+    expect(cancelled.statusCode).toBe(200);
+    expect(cancelled.json().status).toBe("abandoned");
+
+    const active = await app.inject({
+      method: "GET",
+      url: "/api/cook-runs/active/latest"
+    });
+    expect(active.json()).toBeNull();
+
+    const preserved = await app.inject({
+      method: "GET",
+      url: `/api/cook-runs/${run.id}`
+    });
+    expect(preserved.statusCode).toBe(200);
+    expect(preserved.json()).toEqual(
+      expect.objectContaining({
+        status: "abandoned",
+        snapshot: run.snapshot
+      })
+    );
+    expect(preserved.json().events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          text: "Keep this even if I cancel."
+        })
+      ])
+    );
+  });
+
   it("corrects completed Cook Run notes and results without reopening the run", async () => {
     app = buildServer({ dbPath: ":memory:" });
 
