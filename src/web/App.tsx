@@ -1677,7 +1677,7 @@ export function App() {
       <section className="panel" aria-labelledby="history">
         <p className="eyebrow">Evidence, not folklore</p>
         <h2 id="history">Recent Cook Runs</h2>
-        {completedRuns.length === 0 ? (
+        {historyRuns.length === 0 ? (
           <p>
             {isDraft
               ? "No completed Cook Runs yet. This recipe stays Draft until the planned test is cooked and its result markers are recorded."
@@ -1685,10 +1685,15 @@ export function App() {
           </p>
         ) : (
           <div className="history-list">
-            {completedRuns.map((run) => (
+            {historyRuns.map((run) => (
               <article key={run.id}>
                 <div className="history-run-header">
-                  <strong>{formatDate(run.completedAt ?? run.startedAt)}</strong>
+                  <div className="history-run-title">
+                    <strong>{formatDate(run.completedAt ?? run.startedAt)}</strong>
+                    <span className="status">
+                      {run.status === "abandoned" ? "Cancelled" : "Completed"}
+                    </span>
+                  </div>
                   <button
                     type="button"
                     className="text-button"
