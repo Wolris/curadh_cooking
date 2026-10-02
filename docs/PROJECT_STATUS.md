@@ -65,9 +65,19 @@ Final top-level nav labels are intentionally not locked yet.
 
 Cook Mode is a core product direction. MVP should first support structured recipe state, deviations, observations, troubleshooting knowledge, and result capture. A freeform contextual reasoning layer can be added through a clean seam later; basic Cook Mode must not depend on external AI.
 
+## Current operating baseline
+
+- Default branch: `main`, still bootstrap-only and materially behind the implemented application.
+- Current implementation branch: `feature/recipe-0002-chicken-soup`.
+- PR #1 and PR #2 are open/mergeable and their latest GitHub Validate runs are green.
+- Normal local runtime: web `5174` -> API `3101`.
+- Isolated Playwright runtime: web `5274` -> API `3102`.
+- `npm run dev` starts the normal paired web/API development processes; `validate.cmd` owns the project validation wrapper.
+- `feature/recipe-0003-whole-milk-yogurt` is a preserved diverged branch containing the Recipe 0003 draft work; it is not the current application branch and remains intentionally unintegrated pending later reconciliation.
+
 ## Current execution lock
 
-Owner-review implementation for the configurable Cook Mode is now **merge-ready pending Jim's final browser/experience approval**.
+**OWNER EVIDENCE GATE:** the configurable Cook Mode implementation is merge-ready pending Jim's final desktop/mobile browser/experience approval.
 
 Implemented and automated:
 
