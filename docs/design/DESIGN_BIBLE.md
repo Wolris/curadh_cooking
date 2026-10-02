@@ -226,6 +226,22 @@ Initial recipe statuses:
 
 Canonical does not mean perfected. A canonical recipe may retain known improvement opportunities and may later be replaced by a better proven variant.
 
+### Draft-first site workflow
+
+A new or materially adapted recipe should enter the site as **Draft** before kitchen validation.
+
+Draft is not a hidden authoring state. A Draft recipe should be fully viewable and cookable through the normal recipe-detail and Cook Mode flow so the site itself can be used to verify that the recipe tells the complete cooking story:
+
+1. save the proposed formula/method as Draft;
+2. review the Draft in the site for missing quantities, tools, settings, sequence, cues, profile notes, and validation targets;
+3. start a Cook Run from that Draft;
+4. record deviations/observations while cooking;
+5. complete the planned result markers;
+6. promote to **Tested** only after an actual documented kitchen run;
+7. promote to **Canonical** only when Jim explicitly approves it as the current proven/recommended version.
+
+A successful Cook Run does not silently promote status. Status changes are explicit lifecycle decisions.
+
 Cook Runs retain their own evidence even after the canonical Recipe changes.
 
 ## 5. Core experience journey
@@ -437,3 +453,333 @@ Recipe 0001 established the need for:
 - historical/incomplete evidence;
 - variants;
 - Cook Runs distinct from Recipes.
+
+
+## 12. Recipe configuration, prep, and Cook Run snapshots
+
+Recipe 0002 site-story review established that a recipe cannot be treated as one static ingredient list followed by one static sequence of cooking steps. The reusable Recipe should expose intentional configuration choices before cooking, and a Cook Run should preserve the exact choices used for that execution.
+
+### Recipe configuration before cooking
+
+The recipe detail view should support structured choices within the ingredient experience without turning every ingredient into a separate workflow.
+
+An ingredient row may expose:
+
+- **include / omit** when the recipe explicitly allows omission or has a supported omission path;
+- **form / preparation choice** when the recipe supports equivalent practical forms, such as a fresh/raw form versus a pre-chopped, dried, prepared, or packaged form;
+- **quantity / form guidance** appropriate to the selected form;
+- **profile / tolerance advisory** explaining why a person may prefer to omit, substitute, or inspect a packaged ingredient.
+
+These are related controls in one ingredient system, but they are not the same decision. Omitting an ingredient is different from selecting a different supported form.
+
+Alternative forms and conversions are authored recipe knowledge, not universal automatic conversions. A recipe may explicitly support a relationship such as fresh parsley versus a measured prepared form, but the product should not assume that every sprig, clove, stalk, bunch, or package has one universal volume conversion.
+
+### Profile-aware advisories, not medical alarms
+
+Ingredient advisories should remain calm, local, and actionable.
+
+For sensitivity-oriented guidance:
+
+- do not label an ingredient universally safe or unsafe for POTS, MCAS, or another condition;
+- explain that a person may omit or substitute an ingredient when their own profile calls for it;
+- when switching to a packaged/commercial form, surface a small advisory when ingredients, sodium, additives, freshness, or processing may matter to the selected profile;
+- allow explicit profile-level acceptance to remain authoritative over a generic mapping advisory.
+
+Warnings are meant to support a cooking choice, not frighten the cook or imply diagnosis.
+
+### Prep is part of the recipe and part of the run
+
+A Cook Run begins with **Prep**, not with the first heating/cooking instruction.
+
+Prep may include:
+
+- washing;
+- peeling;
+- trimming;
+- chopping;
+- measuring;
+- opening/draining;
+- assembling equipment;
+- other recipe-specific preparation.
+
+Optional prep operations may be toggled off when the recipe explicitly supports doing so. Disabled prep operations should disappear from the generated Cook Run rather than remain as irrelevant instructions.
+
+### Equipment/method choices affect prep and time
+
+Available equipment is a first-class constraint.
+
+A recipe may offer more than one supported preparation method for the same ingredient, for example:
+
+- food processor / Cuisinart;
+- knife;
+- peeler;
+- blender;
+- Instant Pot versus conventional pot where the recipe supports both.
+
+The selected method may change:
+
+- the generated prep instruction;
+- active prep time;
+- the displayed estimated recipe time;
+- the tools shown for the run.
+
+A future Kitchen Profile may supply defaults such as owned equipment, but recipe-level configuration must remain overrideable.
+
+### Start Cook Run freezes a snapshot
+
+**Recipe configuration → Start Cook Run snapshot → Run observations** is the canonical execution model.
+
+When the user selects **Start Cook Run**, the system must preserve the recipe configuration used for that run, including relevant:
+
+- included/omitted ingredients;
+- selected ingredient forms;
+- selected preparation methods;
+- enabled/disabled optional prep operations;
+- planned equipment/settings;
+- generated prep/cook sequence;
+- planned time assumptions.
+
+Subsequent changes to the reusable Recipe must not retroactively alter an in-progress or completed Cook Run.
+
+Changes made after the run starts are recorded as Cook Run evidence rather than silently mutating the Recipe snapshot.
+
+### Prep-first Cook Mode
+
+The generated Cook Run should lead the cook through all required Prep stages before the first cook/heating stage unless the recipe explicitly defines an interleaved workflow.
+
+Cook Mode should communicate stage and position, for example:
+
+- Prep 2 of 6;
+- Cook 1 of 7.
+
+The cook must be able to move backward or forward through the run without losing the current run state.
+
+### Recipe remains reachable during an active run
+
+An active Cook Run must not trap the user in one instruction.
+
+The cook should be able to:
+
+- view the complete recipe;
+- inspect the configured ingredient list;
+- review previous or upcoming steps;
+- return to the same active run position.
+
+Leaving Cook Mode to inspect the Recipe does not end or reset the run. The UI should provide a persistent and obvious **Return to Cooking Run** path while a run is active.
+
+### Record reality during the run
+
+During Cook Mode, the user should be able to record structured changes such as:
+
+- added an ingredient;
+- substituted an ingredient;
+- skipped an ingredient;
+- changed an amount;
+- changed a setting or preparation method;
+- recorded a freeform observation.
+
+For example, replacing one yellow onion with half a white onion plus half a red onion belongs to the Cook Run evidence. It does not automatically rewrite the reusable Recipe.
+
+At review/completion, the product may surface these deviations as candidates for a future recipe revision or Variant, but promotion remains an explicit decision.
+
+### Visual icon layer
+
+Simple icons for common tools/actions/ingredients are an accepted future interface layer, including examples such as knife, peeler, food processor/Cuisinart, Instant Pot, conventional pot, boiling water, and frequently used ingredients.
+
+Icons reinforce scanability; they do not replace text instructions or become a dependency for the underlying structured model.
+
+
+## 13. Configurable Recipe / Cook Run interaction model
+
+The structured product model is now sufficiently defined to support focused interaction design before additional UI development.
+
+The supporting task flow, state matrix, low-fidelity screen/state map, risks, and owner-review questions live in `docs/design/COOK_RUN_UX_DEFINITION.md`.
+
+### Canonical state model
+
+The interface must keep these three states conceptually distinct:
+
+1. **Recipe default** — the reusable authored recipe and its supported choices.
+2. **Run plan** — the frozen configured snapshot created when Start Cook Run is selected.
+3. **Run reality** — deviations and observations recorded after cooking begins.
+
+Before Start Cook Run, supported choices configure the intended run. After Start Cook Run, changes are recorded as run evidence rather than silently changing the frozen plan or reusable Recipe.
+
+### Interaction hierarchy
+
+Recipe configuration should feel like part of reading the recipe, not a separate settings form.
+
+- Controls live beside the ingredient or preparation decision they affect.
+- Only meaningful authored choices receive controls.
+- The visible ingredient presentation updates to reflect selected form, quantity, inclusion state, and relevant prep.
+- Optional ingredients remain visible and reversible before the run begins.
+- Ingredients that are not safely/authored as optional should not receive an omission control merely because the system can record a later skip.
+
+Cook Mode prioritizes the current instruction, orientation, and forward progress. Recording reality is secondary but immediately reachable.
+
+### Structured run changes
+
+The intended structured change set is:
+
+- substitute ingredient;
+- skip ingredient;
+- add ingredient;
+- change amount;
+- change setting/preparation;
+- record an observation.
+
+Freeform notes remain available as a fallback.
+
+An authored Recipe alternative is different from an ad-hoc Cook Run substitution. Run changes do not become Recipe alternatives without a later explicit promotion decision.
+
+### Current MVP boundary
+
+The MVP should faithfully record mid-run changes but does not promise automatic live replanning of all future instructions after an ad-hoc substitution.
+
+Supported authored alternatives can generate the correct plan before Start Cook Run. Generalized live replanning is a later capability requiring explicit dependency rules.
+
+### Kitchen usability
+
+Mobile/kitchen use is a validation requirement before visual polish.
+
+The interaction should assume:
+
+- divided attention;
+- wet or dirty hands;
+- small screens;
+- interruptions;
+- a need for large touch targets;
+- minimal typing for common changes;
+- persistent stage/step orientation;
+- reliable re-entry into an active run.
+
+Icons may improve scanning later, but text labels remain the primary semantic layer until the interaction hierarchy is proven.
+
+
+## 14. Persistent Cook Mode context, useful estimates, and run recovery
+
+Owner review of the first configurable Cook Mode prototype established the following canonical interaction decisions.
+
+### Recipe context is visible during Cook Mode
+
+A separate **View Recipe** route remains useful, but it is not sufficient as the primary orientation mechanism.
+
+On desktop or other sufficiently wide layouts, Cook Mode should pair the active instruction with a persistent recipe-context rail/panel.
+
+During **Prep**, that context is ingredient-oriented:
+
+- show the preparation sequence;
+- highlight the current ingredient/prep item;
+- visibly check completed prep items;
+- Next step completes the current prep item and advances.
+
+During **Cook**, that context is step-oriented:
+
+- show a concise excerpt for each cooking step;
+- highlight and expand the active step;
+- keep other steps compact and interactive;
+- selecting a step jumps the run to that point.
+
+Mobile preserves the same information architecture in a compact/collapsible form rather than requiring a permanent side rail.
+
+### Run progress is persistent state
+
+Current position and completion are Cook Run data, not temporary component decoration.
+
+An active run must be recoverable after refresh/re-entry with:
+
+- frozen run snapshot;
+- current stage/step;
+- completed prep/step progress;
+- recorded deviations/observations.
+
+### Useful estimates are allowed
+
+Verified or recipe-authored conversions are preferred, but Curadh Cooking may provide a clearly labeled **unverified estimate** when a user explicitly asks for a practical conversion or substitution and no verified value exists.
+
+The estimate must communicate uncertainty and must not silently become canonical recipe data.
+
+### Tolerance-awareness language
+
+Default ingredient advisories should communicate **be aware of tolerance** rather than functioning as medical warnings.
+
+They may explain why a form or ingredient deserves attention, but they must not imply universal safety, diagnosis, or treatment.
+
+### Persistence errors are visible
+
+A Cook Run interaction that fails to save must show the user that it failed. Silent persistence failure is unacceptable.
+
+### Run notes are step-bound and correctable
+
+Every Cook Run note/deviation is associated with the exact generated run step where it was recorded, including generated Prep steps that do not correspond to a reusable recipe-step record.
+
+A saved run note can be:
+
+- edited;
+- reclassified to a different run-change type;
+- deleted.
+
+Editing or deleting a run note changes Cook Run evidence only. It does not rewrite the frozen Run plan or reusable Recipe.
+
+When editing a note from an earlier step, changing its type or wording must preserve its original step association unless the user explicitly moves it in a future interaction.
+
+### Step navigation remains reachable after note entry
+
+Because note entry shifts attention down the Cook Mode page, Previous / Next navigation should be repeated immediately after the run-note area.
+
+Finish Cook Run remains a separate action below ordinary step navigation so moving to the next step is less likely to be confused with ending the run.
+
+
+### Completed Cook Runs remain correctable evidence
+
+Submitting a Cook Run freezes its execution status as **completed**, but does not make human-entered evidence immutable.
+
+A completed Cook Run must support a dedicated **Edit run** experience that:
+
+- preserves the original frozen Recipe/Run snapshot;
+- preserves started/completed timestamps and completed status;
+- allows run notes/deviations to be added after submission when something was omitted;
+- allows existing notes to be edited, reclassified, or deleted;
+- keeps every note tied to a valid generated Prep/Cook step;
+- allows submitted result-marker outcomes and notes to be corrected;
+- clearly distinguishes correction of historical evidence from changing the reusable Recipe.
+
+A completed run is not “reopened” for cooking merely because its evidence is corrected.
+
+This is important because post-run reflection often reveals classification or transcription mistakes immediately after submission. The product should make correction easier than recreating the Cook Run or silently tolerating bad evidence.
+
+
+### Run Plan navigation and cancellation
+
+The right-side execution context is consistently named **Run Plan**.
+
+For an active run:
+
+- Prep view shows the Prep steps, followed by section navigation to **Cooking** and **Results**.
+- Cooking view shows **Prep** first, then the cooking-step outline, and **Results** last.
+- Results view keeps section navigation back to Prep and Cooking and identifies Results as the current section.
+- Selecting Prep or Cooking jumps to the first step of that section.
+- Selecting Results opens/jumps to the result-marker section.
+
+For completed-run evidence editing:
+
+- the Run Plan remains interactive;
+- selecting a Prep/Cook step opens an empty inline note at that step's position in the evidence stream;
+- notes are read in run-step order and remain fully readable when not being edited;
+- editing happens inline where the note lives, not in a detached form elsewhere on the page;
+- Results is the final Run Plan section and jumps to the result markers.
+
+On wide layouts the Run Plan is sticky and uses the available viewport height with its own overflow as needed.
+
+### Cancelling an active Cook Run
+
+An active Cook Run may be cancelled only after an explicit **Are you sure?** confirmation.
+
+Cancellation:
+
+- does not delete the Cook Run;
+- preserves the frozen run snapshot, recorded notes, and progress;
+- changes the run out of active recovery state into the preserved abandoned/cancelled state;
+- returns the user to the recipe context.
+
+Cancel is distinct from Finish Cook Run. Finishing records results; cancelling stops the execution without pretending it was completed.

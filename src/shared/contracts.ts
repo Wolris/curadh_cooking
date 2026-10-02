@@ -3,6 +3,9 @@ import { z } from "zod";
 export const cookRunEventTypeSchema = z.enum([
   "observation",
   "substitution",
+  "ingredient-skip",
+  "ingredient-add",
+  "amount-change",
   "setting-change",
   "intervention",
   "note"
@@ -15,20 +18,38 @@ export const resultOutcomeSchema = z.enum([
   "not-observed"
 ]);
 
+export const recipeSelectionValueSchema = z.union([z.string(), z.boolean()]);
+
 export const startCookRunSchema = z.object({
   recipeId: z.string().min(1),
-  variantId: z.string().min(1)
+  variantId: z.string().min(1),
+  selections: z.record(z.string(), recipeSelectionValueSchema).optional()
 });
 
 export const updateCookRunSchema = z.object({
-  currentStepId: z.string().min(1).nullable()
-});
+  currentStepId: z.string().min(1).nullable().optional(),
+  currentStepKey: z.string().min(1).nullable().optional(),
+  completedStepKeys: z.array(z.string().min(1)).optional()
+}).refine(
+  (value) =>
+    value.currentStepId !== undefined ||
+    value.currentStepKey !== undefined ||
+    value.completedStepKeys !== undefined,
+  { message: "A Cook Run progress change is required" }
+);
 
 export const createCookRunEventSchema = z.object({
   stepId: z.string().min(1).nullable().optional(),
+  runStepKey: z.string().min(1),
   eventType: cookRunEventTypeSchema,
   text: z.string().trim().min(1),
   structuredData: z.record(z.string(), z.unknown()).optional()
+});
+
+export const updateCookRunEventSchema = z.object({
+  eventType: cookRunEventTypeSchema,
+  text: z.string().trim().min(1),
+  runStepKey: z.string().min(1)
 });
 
 export const completeCookRunSchema = z.object({
@@ -42,4 +63,5 @@ export const completeCookRunSchema = z.object({
 });
 
 export type CookRunEventType = z.infer<typeof cookRunEventTypeSchema>;
+export type RecipeSelectionValue = z.infer<typeof recipeSelectionValueSchema>;
 export type ResultOutcome = z.infer<typeof resultOutcomeSchema>;

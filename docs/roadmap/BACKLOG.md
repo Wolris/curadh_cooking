@@ -62,3 +62,29 @@ Approved future work not currently active.
 - automatic meal planning;
 - grocery-list/purchasing integrations;
 - paid nutrition/sensitivity data sources.
+
+
+## Identity, persistence, and profile foundation
+
+This is approved future foundation work after the current Cook Run interaction is proven locally.
+
+Keep these concepts separate:
+
+- **Account / auth identity** — who can sign in;
+- **Cooking Profile** — ingredient tolerances, mappings, overrides, preferences, nutrition considerations;
+- **Kitchen Profile** — available equipment, preferred units, preparation defaults, and later pantry/context;
+- **Cook Run actor/ownership** — who performed and owns a run;
+- **Recipe/library ownership** — personal/shared recipe data.
+
+Planned sequence:
+
+1. prove Profile and Kitchen Profile domain models locally;
+2. attach Cook Runs and recipe/library data to explicit owners/profiles;
+3. choose hosted persistence/sync architecture for multi-device use;
+4. add authentication, with Google sign-in as an intended option;
+5. add session/account lifecycle;
+6. add versioned Terms of Use / Privacy Policy acceptance before public account use;
+7. support data export, deletion, and backup/recovery;
+8. later support invited household/shared access without requiring a public social network.
+
+Do not make Google identity itself the Cooking Profile or Kitchen Profile.

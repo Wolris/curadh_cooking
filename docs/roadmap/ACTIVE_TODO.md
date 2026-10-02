@@ -2,101 +2,205 @@
 
 ## Current phase
 
-**MVP implementation — first end-to-end Recipe/Cook Run slice.**
+**MVP implementation — recipe library + Cook Run evidence.**
 
 ## CURRENT EXECUTION LOCK
 
-**AWAITING OWNER/BROWSER VALIDATION — Production scaffold + Recipe 0001 Cook Run vertical slice.**
+**OWNER EVIDENCE GATE — final browser/experience approval before landing the proven Cook Mode stack.**
 
-PR:
+Branch:
 
-- #1 — `Establish Curadh Cooking MVP and Recipe 0001 Cook Run flow`
-- branch: `feature/recipe-0001-v1`
+- `feature/recipe-0002-chicken-soup`
+- Recipe 0002 remains **Draft**;
+- implementation and automated validation are complete;
+- no merge/retarget or further kitchen validation until Jim completes the final browser/experience review.
 
-### Implemented flow
 
-**Recipe library -> Oatmeal Sandwich Bread -> Start Cook Run -> Cook Mode -> record observation/deviation -> finish -> result markers -> saved Recipe history.**
+### Pre-migration operating baseline — 2026-10-02
 
-Implemented architecture:
+- GitHub default branch remains `main`, but `main` contains only the original bootstrap state and is not the current implementation truth.
+- PR #1 (`feature/recipe-0001-v1` -> `main`) is open, mergeable, and its latest Validate workflow is green.
+- PR #2 (`feature/recipe-0002-chicken-soup` -> `feature/recipe-0001-v1`) is open, mergeable, and its latest Validate workflow is green.
+- This branch is the current implementation branch and is 160 commits ahead of `main`.
+- `feature/recipe-0003-whole-milk-yogurt` is preserved but intentionally unintegrated: it diverged before the later Cook Mode work and carries the Recipe 0003 draft/evidence work. Do not treat it as the current application branch or silently merge/cherry-pick it during cleanup.
+- Normal local development topology: Vite web `127.0.0.1:5174` proxies `/api` to Fastify `127.0.0.1:3101`.
+- Playwright uses isolated non-reusable ports: web `5274`, API `3102`.
+- Port `3001` is intentionally not used by Curadh Cooking after a collision with another local service was confirmed.
+- Startup commands: `npm run dev` for normal paired web/API development; `validate.cmd` for the repository validation workflow.
+- GitHub validation proves typecheck, API/unit tests, production build, and Playwright browser vertical slice on the current PR heads. No new local runtime failure is known.
+- The sole current waiting state is owner browser/experience approval. Migration must not begin while the proven implementation remains stranded off the default branch.
 
-- React + Vite + TypeScript web client;
-- Node + Fastify + TypeScript API;
-- SQLite runtime persistence;
-- version-controlled SQL migrations;
-- shared Zod contracts;
-- modular monolith;
-- no external AI dependency for the first usable Cook Mode.
+### Verified foundation already implemented
 
-### Automated validation
+- configurable Recipe 0002 ingredient/form/prep choices;
+- frozen Cook Run configuration snapshot;
+- prep-first generated run;
+- omission-aware generated instructions;
+- previous/next run navigation;
+- active-run Recipe inspection/return path;
+- structured quick-action prototype for Observation, Substitute, Skip, Add, Amount, and Setting / prep;
+- local SQLite persistence for Cook Runs/events.
 
-Latest CI branch validation before the local-validator update: **PASS**
+### Owner-review findings now controlling this lock
 
-- TypeScript typecheck — PASS
-- API/domain tests — PASS
-- production build — PASS
-- Playwright browser vertical flow — PASS
+1. **Fix structured event persistence.**
+   - migrate SQLite event-type constraints so every supported structured action can save;
+   - specifically prove Add with the reported `1 tsp garlic powder` example;
+   - surface save failures in the UI instead of silently doing nothing.
 
-Latest owner-local full validation: **BLOCKED BY PLAYWRIGHT DEV-SERVER STARTUP**
+2. **Add persistent Recipe context inside Cook Mode.**
+   - desktop: recipe context visible to the right of the active instruction;
+   - mobile: compact/collapsible equivalent rather than forced two-column layout.
 
-- pull/install/typecheck/test/build — PASS
-- Playwright Chromium install — PASS
-- Playwright timed out waiting for its configured local web servers before the E2E test started
-- normal manual development uses web 5174 + API 3101
-- automated E2E is now isolated on dedicated web 5274 + API 3102
-- E2E ports are non-reusable so a true collision fails explicitly instead of silently attaching to another project
-- port 3001 was confirmed to belong to another local service (`GET /api/health` returned 404)
-- normal Curadh API default moved to 3101; owner-local browser review should use 5174 -> 3101
-- owner-local rerun required
+3. **Prep context becomes a persistent ingredient/prep checklist.**
+   - preparation-order list;
+   - current item highlighted;
+   - completed items checked;
+   - Next step marks the current prep item complete and advances;
+   - completion survives refresh/re-entry.
 
-The browser automation proves:
+4. **Cook context becomes an interactive step outline.**
+   - concise excerpt for every cooking step;
+   - current step highlighted and expanded;
+   - inactive steps compact;
+   - selecting an excerpt jumps to that run step;
+   - Previous / Next and direct-jump navigation remain synchronized.
 
-- Recipe 0001 loads;
-- proven White / Light / 1.5 lb settings render;
-- a Cook Run can start;
-- a live observation can be recorded and persisted;
-- result markers save independently;
-- `Height / rise = mixed` can coexist with `Flavor = hit`;
-- the completed run appears in Recipe history.
+5. **Implement active Cook Run recovery.**
+   - detect/recover an active local run after refresh/re-entry;
+   - restore frozen snapshot, current step, completed progress, and run events;
+   - do not require re-entering successfully saved feedback.
 
-### Local validation entrypoint
+6. **Refine conversions/substitution assistance.**
+   - verified/authored conversion remains preferred;
+   - when explicitly requested, allow a clearly labeled relative/unverified estimate;
+   - explain uncertainty where ingredient size/density/form matters;
+   - estimated values do not silently become canonical recipe data.
 
-Windows validation now mirrors the established Mundane Adventures workflow:
+7. **Refine sensitivity messaging.**
+   - default to small **be aware of tolerance** notices;
+   - keep profile-specific omission/substitution actionable;
+   - do not frame advisories as universal medical safety warnings.
 
-- `validate.cmd` — full pull/install/typecheck/test/build/browser validation;
-- `validate.cmd quick` — typecheck/test/build without pull/install/browser;
-- `validate.cmd browser` — ensures Playwright Chromium is installed, then runs browser validation;
-- `validate.cmd -Branch <name>` — fetch/switch/pull the requested branch before validating;
-- archived logs live under ignored `validation-logs/`, with `latest.txt` as the handoff/debug artifact;
-- `package-lock.json` is ignored while this scaffold intentionally uses `npm install --no-package-lock`;
-- the validator reports start/end branch + commit, working-tree state, individual step results, and preserves failure exit codes.
+8. **Complete structured live-change interaction.**
+   - preserve quick actions: Observation, Substitute, Skip, Add, Amount, Setting / prep;
+   - freeform detail remains available;
+   - every run note/change is tied to the exact generated run step where it was recorded, including Prep steps;
+   - allow an existing run note/change to be **edited**, including changing its type;
+   - allow an existing run note/change to be **deleted**;
+   - editing/deleting changes Cook Run evidence only and never rewrites the frozen Recipe snapshot;
+   - duplicate Previous / Next navigation immediately after the run-note area so the likely next action is available where attention already is;
+   - keep Finish Cook Run visually and behaviorally distinct from ordinary step progression;
+   - ingredient pickers/quantity structure may be added only where they lower cooking friction;
+   - no generalized automatic mid-run replanning yet.
 
-### Owner/browser validation requested
+9. **Validate the complete owner-review story.**
+   Automated:
+   - all structured event types persist;
+   - active run recovery works;
+   - prep completion persists;
+   - direct step jump persists/synchronizes;
+   - Recipe 0001 remains green.
+   
+   Owner browser review:
+   - desktop context rail;
+   - mobile/kitchen-scale treatment;
+   - prep checklist behavior;
+   - cooking-step outline behavior;
+   - structured change capture;
+   - tolerance notice tone;
+   - estimated-conversion presentation.
 
-Review the current functional scaffolding, not final visual design.
+10. **Support completed Cook Run correction before resuming kitchen validation.**
+    - Recent Cook Runs expose an **Edit run** action;
+    - editing a completed run does **not** reopen it or change its completed timestamp;
+    - show the frozen Run plan as read-only context;
+    - show all step-bound run notes grouped/labeled by their Prep/Cook step;
+    - allow completed-run notes to be added, edited, reclassified, or deleted;
+    - allow submitted result-marker outcomes/notes to be corrected;
+    - corrections update Cook Run evidence only and never rewrite the frozen Recipe snapshot;
+    - validate the already-submitted Recipe 0002 run can correct the garlic note from Setting / prep to Add.
 
-1. Home communicates a goal-first starting point and exposes Oatmeal Sandwich Bread.
-2. Recipe detail foregrounds useful cooking facts, proven settings, known successes, and the height improvement opportunity without lifestyle-blog filler.
-3. Start Cook Run enters a clear step-oriented Cook Mode.
-4. Record a live observation/deviation and verify it appears in the run notes.
-5. Finish the run and record independent results — especially one successful marker and one mixed marker.
-6. Save results and verify the completed run appears in Recent Cook Runs.
-7. Report whether this interaction model feels like the right foundation for the eventual goal + ingredients + profile + tools + time experience.
+11. **Resume Recipe 0002 kitchen validation / evidence reconciliation after owner UI approval.**
+    - use the already-completed run as evidence once corrections are complete;
+    - reconcile result markers and deviations;
+    - status promotion remains explicit.
 
-### Merge gate
+### Implementation progress after owner review
 
-Do not merge PR #1 until Jim approves the browser/experience review.
+Implemented and automated:
+
+- structured Add / Skip / Amount / Substitute / Setting-prep / Observation event types persist through SQLite migrations;
+- run-note save failures surface visibly;
+- every new run note is bound to a validated generated run-step key, including Prep steps;
+- run notes can be edited, reclassified, and deleted without altering the frozen Recipe/Run plan;
+- Previous / Next navigation is repeated below run notes, before Finish Cook Run;
+- Cook Mode now includes a persistent recipe-context rail on wide layouts and a stacked equivalent on narrower layouts;
+- Prep context shows preparation-order items, highlights the current item, and checks completed items;
+- Next step persists completion before advancing;
+- Cook context shows compact step excerpts, expands the active step, and supports direct step jumping;
+- active local Cook Runs recover after refresh/re-entry with snapshot, current position, completed progress, and saved notes;
+- prepared-parsley alternate units are explicitly labeled as an unverified estimate;
+- ingredient advisories use tolerance-awareness language rather than universal medical-warning language.
+
+Automated coverage proves:
+
+- invalid run-note step associations are rejected;
+- note type correction and deletion work;
+- Prep completion survives refresh;
+- saved run notes survive refresh;
+- active run recovery restores the correct step;
+- direct Cook-step jump synchronizes the run position;
+- Recipe 0001 remains green.
+
+Completed Cook Run correction interface implemented and validated:
+
+- Recent Cook Runs now exposes **Edit run**;
+- completed runs stay completed and retain their original completion timestamp;
+- frozen run plan is shown read-only;
+- step-bound notes can be added after submission, edited, reclassified, or deleted;
+- submitted result-marker outcomes and notes can be corrected;
+- corrections update Cook Run evidence only and do not rewrite the frozen Recipe snapshot;
+- automated browser coverage proves the submitted-run editor path end to end.
+
+Final owner-review usability pass — **IMPLEMENTED / AUTOMATED PASS**:
+
+- completed-run notes render as full readable text;
+- completed-run note editing happens **in place**, inside the note's chronological/step position;
+- clicking a Run Plan step while editing a completed run opens a blank inline note after existing notes for that step and before notes from the next step;
+- completed-run Run Plan is sticky and viewport-height on wide layouts;
+- **Results** is the final completed-run Run Plan section and jumps to result markers;
+- active Cook Mode consistently labels the rail **Run Plan**;
+- active Run Plan exposes Prep / Cooking / Results section navigation and direct step navigation;
+- Results view retains Run Plan access to Prep, Cooking, and individual result markers;
+- Cancel Cook Run requires explicit confirmation and preserves the run as `abandoned` rather than deleting snapshot/progress/notes;
+- cancelled runs remain reachable in Recent Cook Runs for evidence review/correction;
+- explicit accessible names cover Run Plan step/section controls;
+- TypeScript, API/unit, production build, and browser vertical-slice validation all pass on the final implementation.
+
+### MERGE PREPARATION GATE
+
+The implementation is merge-ready **pending Jim's browser/experience approval**.
+
+Required landing order:
+
+1. Jim reviews the final branch in-browser and explicitly approves merge.
+2. Merge PR #1 (`feature/recipe-0001-v1`) into `main`.
+3. Retarget PR #2 from `feature/recipe-0001-v1` to `main`.
+4. Verify PR #2 diff/CI after retarget.
+5. Merge PR #2 only on Jim's explicit approval.
+
+Do not merge or retarget ahead of the owner approval gate.
+
+### Supporting UX owner
+
+`docs/design/COOK_RUN_UX_DEFINITION.md` owns the detailed task flow, state matrix, low-fidelity states, review findings, and risks for this lock.
+
+## Dependency / existing merge gate
+
+PR #1 — `Establish Curadh Cooking MVP and Recipe 0001 Cook Run flow` — remains unmerged and still requires Jim's browser/experience approval before merge.
 
 ## Recently closed
-
-### Initial MVP architecture — ACCEPTED
-
-- TypeScript modular monolith;
-- React/Vite client;
-- Fastify REST API;
-- SQLite + migrations;
-- shared Zod contracts;
-- first domain model derived from Recipe 0001;
-- contextual reasoning preserved as a future seam rather than an MVP dependency.
 
 ### Recipe 0001 — Oatmeal Sandwich Bread — CANONICAL / SUCCESS
 

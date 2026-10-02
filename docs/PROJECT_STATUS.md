@@ -65,9 +65,61 @@ Final top-level nav labels are intentionally not locked yet.
 
 Cook Mode is a core product direction. MVP should first support structured recipe state, deviations, observations, troubleshooting knowledge, and result capture. A freeform contextual reasoning layer can be added through a clean seam later; basic Cook Mode must not depend on external AI.
 
+## Current operating baseline
+
+- Default branch: `main`, still bootstrap-only and materially behind the implemented application.
+- Current implementation branch: `feature/recipe-0002-chicken-soup`.
+- PR #1 and PR #2 are open/mergeable and their latest GitHub Validate runs are green.
+- Normal local runtime: web `5174` -> API `3101`.
+- Isolated Playwright runtime: web `5274` -> API `3102`.
+- `npm run dev` starts the normal paired web/API development processes; `validate.cmd` owns the project validation wrapper.
+- `feature/recipe-0003-whole-milk-yogurt` is a preserved diverged branch containing the Recipe 0003 draft work; it is not the current application branch and remains intentionally unintegrated pending later reconciliation.
+
 ## Current execution lock
 
-Implement the first end-to-end Recipe/Cook Run vertical slice: Recipe library -> Oatmeal Sandwich Bread -> Start Cook Run -> Cook Mode -> observation/deviation -> result markers -> saved run history.
+**OWNER EVIDENCE GATE:** the configurable Cook Mode implementation is merge-ready pending Jim's final desktop/mobile browser/experience approval.
+
+Implemented and automated:
+
+- structured run notes persist and failed saves surface visibly;
+- every run note is bound to its generated run step, including Prep;
+- run notes can be edited, reclassified, and deleted;
+- Previous / Next is repeated below run notes before Finish Cook Run;
+- Cook Mode has a persistent recipe-context rail on wide layouts and stacked treatment on narrow layouts;
+- Prep context highlights the current ingredient/prep item and checks completed items;
+- Next step persists completion before advancing;
+- Cook context shows interactive step excerpts with current-step expansion and direct jumping;
+- active local Cook Runs recover after refresh/re-entry with snapshot, step, completion, and notes;
+- unverified unit alternatives can be labeled explicitly as estimates;
+- ingredient advisories use tolerance-awareness language.
+
+Full TypeScript/API/build/browser validation passes on the combined implementation.
+
+Completed-run correction and the final usability pass are implemented and fully validated:
+
+- Recent Cook Runs -> Edit run;
+- full run-note text remains readable;
+- note edits happen inline at the step where the evidence lives;
+- clicking a completed-run Run Plan step opens a blank inline note at that point;
+- sticky viewport-height Run Plan with Results as the final section;
+- active Run Plan supports Prep / Cooking / Results section jumps plus direct step navigation;
+- cancelled runs require confirmation, preserve their evidence, and remain reachable in history;
+- submitted result markers remain correctable without reopening the run;
+- completed/cancelled state and frozen snapshots remain preserved.
+
+Full TypeScript/API/unit/build/browser validation passes on the final implementation.
+
+Merge preparation:
+
+1. Jim performs final desktop/mobile browser review and explicitly approves merge.
+2. Merge PR #1 to `main`.
+3. Retarget stacked PR #2 to `main`.
+4. Reverify PR #2 diff and CI.
+5. Merge PR #2 only with Jim's explicit approval.
+
+After landing, Recipe 0002 remains Draft until its existing Cook Run evidence is reconciled and status promotion is explicitly approved.
+
+Canonical design detail is in Design Bible §§12–14 and `docs/design/COOK_RUN_UX_DEFINITION.md`.
 
 ## Repository visibility
 

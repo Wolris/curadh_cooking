@@ -6,6 +6,95 @@ export type CuradhDb = InstanceType<typeof Database>;
 
 const now = () => new Date().toISOString();
 
+const recipe0002Configuration = {
+  version: 1,
+  choices: [
+    {
+      key: "yellow-onion.include",
+      kind: "toggle",
+      label: "Yellow onion",
+      ingredientId: "yellow-onion",
+      defaultValue: true,
+      advisory: "Be aware of tolerance: this ingredient may work differently for different profiles. Omit or substitute it when it does not fit the selected profile."
+    },
+    {
+      key: "celery.include",
+      kind: "toggle",
+      label: "Celery",
+      ingredientId: "celery",
+      defaultValue: true,
+      advisory: "Be aware of tolerance: this ingredient may work differently for different profiles. Omit or substitute it when it does not fit the selected profile."
+    },
+    {
+      key: "parsley.include",
+      kind: "toggle",
+      label: "Parsley",
+      ingredientId: "parsley",
+      defaultValue: true,
+      advisory: "Be aware of tolerance: this ingredient may work differently for different profiles. Omit or substitute it when it does not fit the selected profile."
+    },
+    {
+      key: "parsley.form",
+      kind: "select",
+      label: "Parsley form",
+      ingredientId: "parsley",
+      defaultValue: "fresh",
+      options: [
+        {
+          value: "fresh",
+          label: "Fresh parsley",
+          quantity: "8 to 10 sprigs",
+          form: null
+        },
+        {
+          value: "prepared",
+          label: "Prepared / pre-chopped parsley",
+          quantity: "2 tsp",
+          form: "prepared or pre-chopped",
+          estimate: true,
+          estimateNote: "Unverified recipe estimate: about 2 tsp prepared parsley for the fresh sprigs used here. Actual volume varies with sprig size, chop, and packing.",
+          advisory: "Be aware of tolerance: if using a commercial prepared product, check its ingredient list, sodium, additives, and freshness against the selected profile."
+        }
+      ]
+    },
+    {
+      key: "carrots.peel",
+      kind: "toggle",
+      label: "Peel carrots",
+      ingredientId: "carrots",
+      defaultValue: true
+    },
+    {
+      key: "carrots.prep",
+      kind: "select",
+      label: "Carrot prep method",
+      ingredientId: "carrots",
+      defaultValue: "cuisinart",
+      options: [
+        {
+          value: "cuisinart",
+          label: "Cuisinart / food processor",
+          activeMinutes: 2
+        },
+        {
+          value: "knife",
+          label: "Knife",
+          activeMinutes: 5
+        }
+      ]
+    }
+  ]
+};
+
+function ensureRecipe0002Configuration(db: CuradhDb) {
+  db.prepare(`
+    UPDATE recipe_variants
+    SET configuration_json = ?
+    WHERE id = 'recipe-0002-v1'
+  `).run(JSON.stringify(recipe0002Configuration));
+}
+
+
 function runMigrations(db: CuradhDb) {
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -187,6 +276,144 @@ function seedRecipe0001(db: CuradhDb) {
   })();
 }
 
+
+function seedRecipe0002(db: CuradhDb) {
+  const existing = db.prepare("SELECT 1 FROM recipes WHERE id = ?").get("recipe-0002");
+  if (existing) return;
+
+  const createdAt = now();
+
+  db.transaction(() => {
+    db.prepare(`
+      INSERT INTO recipes (
+        id, slug, title, status, summary, known_result_summary,
+        known_improvement, canonical_variant_id, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      "recipe-0002",
+      "homemade-chicken-soup",
+      "Homemade Chicken Soup",
+      "draft",
+      "A simple chicken-and-carrot soup adapted from the source recipe for an Instant Pot, with the cooked carrots pureed in a Cuisinart and returned to the broth.",
+      "The source method is established, but this Instant Pot + Cuisinart adaptation has not yet been validated in the Curadh Cooking kitchen.",
+      "First Cook Run should validate broth strength, carrot-puree body, salt balance, aromatic balance, and actual profile fit.",
+      "recipe-0002-v1",
+      createdAt,
+      createdAt
+    );
+
+    db.prepare(`
+      INSERT INTO recipe_variants (id, recipe_id, label, status, yield_text, notes, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      "recipe-0002-v1",
+      "recipe-0002",
+      "V1 — Instant Pot + Cuisinart adaptation",
+      "draft",
+      "About 6 bowls",
+      "POTS: soup can be a useful fluid/sodium vehicle, but salt should follow the selected profile or clinician target. MCAS: do not apply a universal avoid list; omit individual triggers, use fresh ingredients, and chill leftovers promptly. Pressure cooking is not treated as a way to destroy pre-existing histamine.",
+      createdAt
+    );
+
+    const ingredients = [
+      ["bone-in-chicken-parts", "Bone-in chicken thighs and/or drumsticks", "Legs and thighs are preferred for broth flavor."],
+      ["carrots", "Carrots", null],
+      ["yellow-onion", "Yellow onion", null],
+      ["celery", "Celery", null],
+      ["parsley", "Parsley", null]
+    ] as const;
+
+    const insertIngredient = db.prepare(
+      "INSERT OR IGNORE INTO ingredients (id, canonical_name, notes) VALUES (?, ?, ?)"
+    );
+    for (const ingredient of ingredients) insertIngredient.run(...ingredient);
+
+    const variantIngredients = [
+      ["bone-in-chicken-parts", "2 1/2 to 3 lb", "bone-in thighs and/or drumsticks", 1, 0],
+      ["carrots", "6 to 8 medium", "peeled; cut in large pieces", 2, 0],
+      ["yellow-onion", "1 large", "quartered", 3, 1],
+      ["celery", "2 to 3 stalks", "cut in half", 4, 1],
+      ["parsley", "8 to 10 sprigs", null, 5, 1],
+      ["salt", "2 tsp to start", "fine salt; adjust after cooking", 6, 0]
+    ] as const;
+
+    const insertVariantIngredient = db.prepare(`
+      INSERT INTO variant_ingredients (
+        variant_id, ingredient_id, quantity_text, form_text, position, optional
+      ) VALUES ('recipe-0002-v1', ?, ?, ?, ?, ?)
+    `);
+    for (const ingredient of variantIngredients) insertVariantIngredient.run(...ingredient);
+
+    const steps = [
+      "Put the chicken, carrots, onion, celery, parsley, and 2 tsp salt into the Instant Pot.",
+      "Add 4 to 6 cups cold water, using only enough to nearly cover the ingredients without crossing the pressure-cook fill limit for your Instant Pot.",
+      "Lock the lid and cook on High Pressure for 20 minutes.",
+      "When the cook ends, allow 15 minutes of natural pressure release, then carefully release the remaining pressure.",
+      "Check the thickest chicken piece with an instant-read thermometer; poultry must reach at least 165°F / 74°C before serving.",
+      "Lift out the chicken and set it aside.",
+      "Strain the broth into a large bowl or second pot. Keep the cooked carrots; discard the spent onion, celery, and parsley unless you intentionally want to retain them.",
+      "Skim excess surface fat if desired.",
+      "Puree the cooked carrots in the Cuisinart with 1 cup of strained broth until smooth. Add another 1/2 to 1 cup broth only if needed to make the puree move cleanly.",
+      "Stir the carrot puree back into the remaining broth.",
+      "Remove bones, skin, and cartilage from the chicken, then return as much shredded chicken to the soup as desired.",
+      "Taste and adjust salt. Follow the selected profile or clinician-set sodium target rather than treating one salt amount as universally correct for POTS.",
+      "Serve hot. Refrigerate or freeze leftovers promptly; use shallow containers for faster cooling."
+    ];
+
+    const insertStep = db.prepare(`
+      INSERT INTO recipe_steps (id, variant_id, position, instruction, stage_key)
+      VALUES (?, 'recipe-0002-v1', ?, ?, ?)
+    `);
+    steps.forEach((instruction, index) => {
+      const position = index + 1;
+      insertStep.run(
+        `recipe-0002-v1-step-${position}`,
+        position,
+        instruction,
+        position <= 5 ? "pressure-cook" : position <= 10 ? "strain-puree" : "finish"
+      );
+    });
+
+    const insertEquipment = db.prepare(
+      "INSERT OR IGNORE INTO equipment (id, name) VALUES (?, ?)"
+    );
+    insertEquipment.run("instant-pot", "Instant Pot pressure cooker");
+    insertEquipment.run("cuisinart", "Cuisinart blender / food processor");
+    insertEquipment.run("instant-read-thermometer", "Instant-read food thermometer");
+
+    const insertSetting = db.prepare(`
+      INSERT INTO variant_equipment_settings (
+        variant_id, equipment_id, setting_key, setting_value
+      ) VALUES ('recipe-0002-v1', ?, ?, ?)
+    `);
+    [
+      ["instant-pot", "Program", "Pressure Cook / Manual"],
+      ["instant-pot", "Pressure", "High"],
+      ["instant-pot", "Cook time", "20 minutes"],
+      ["instant-pot", "Release", "15 minutes natural, then vent remaining pressure"],
+      ["cuisinart", "Carrot puree", "Start with 1 cup broth; add more only as needed"],
+      ["instant-read-thermometer", "Chicken minimum", "165°F / 74°C"]
+    ].forEach((setting) => insertSetting.run(...setting));
+
+    const markers = [
+      ["broth-flavor", "Broth flavor", "Chicken-forward and savory rather than watery."],
+      ["carrot-body", "Carrot body / texture", "Lightly velvety body without becoming a carrot puree soup."],
+      ["chicken-tenderness", "Chicken tenderness", "Tender and easy to pull from the bone."],
+      ["salt-balance", "Salt balance", "Pleasant at the table and adjustable to the selected profile."],
+      ["aromatic-balance", "Aromatic balance", "Onion, celery, and parsley support rather than dominate the broth."],
+      ["soup-usefulness", "Overall soup usefulness", "Worth repeating as a practical meal / broth base."]
+    ] as const;
+
+    const insertMarker = db.prepare(`
+      INSERT INTO result_markers (id, recipe_id, marker_key, label, description, position)
+      VALUES (?, 'recipe-0002', ?, ?, ?, ?)
+    `);
+    markers.forEach((marker, index) =>
+      insertMarker.run(`recipe-0002-marker-${marker[0]}`, marker[0], marker[1], marker[2], index + 1)
+    );
+  })();
+}
+
 export function openDatabase(dbPath = process.env.CURADH_DB_PATH ?? path.resolve("data/curadh-cooking.sqlite")) {
   if (dbPath !== ":memory:") {
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -196,5 +423,7 @@ export function openDatabase(dbPath = process.env.CURADH_DB_PATH ?? path.resolve
   db.pragma("foreign_keys = ON");
   runMigrations(db);
   seedRecipe0001(db);
+  seedRecipe0002(db);
+  ensureRecipe0002Configuration(db);
   return db;
 }
