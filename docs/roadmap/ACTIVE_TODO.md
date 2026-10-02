@@ -6,13 +6,29 @@
 
 ## CURRENT EXECUTION LOCK
 
-**RECONCILE OWNER REVIEW INTO A PERSISTENT, RECIPE-ORIENTED COOK MODE.**
+**OWNER EVIDENCE GATE — final browser/experience approval before landing the proven Cook Mode stack.**
 
 Branch:
 
 - `feature/recipe-0002-chicken-soup`
 - Recipe 0002 remains **Draft**;
-- no further kitchen validation until this lock reaches owner-review readiness.
+- implementation and automated validation are complete;
+- no merge/retarget or further kitchen validation until Jim completes the final browser/experience review.
+
+
+### Pre-migration operating baseline — 2026-10-02
+
+- GitHub default branch remains `main`, but `main` contains only the original bootstrap state and is not the current implementation truth.
+- PR #1 (`feature/recipe-0001-v1` -> `main`) is open, mergeable, and its latest Validate workflow is green.
+- PR #2 (`feature/recipe-0002-chicken-soup` -> `feature/recipe-0001-v1`) is open, mergeable, and its latest Validate workflow is green.
+- This branch is the current implementation branch and is 160 commits ahead of `main`.
+- `feature/recipe-0003-whole-milk-yogurt` is preserved but intentionally unintegrated: it diverged before the later Cook Mode work and carries the Recipe 0003 draft/evidence work. Do not treat it as the current application branch or silently merge/cherry-pick it during cleanup.
+- Normal local development topology: Vite web `127.0.0.1:5174` proxies `/api` to Fastify `127.0.0.1:3101`.
+- Playwright uses isolated non-reusable ports: web `5274`, API `3102`.
+- Port `3001` is intentionally not used by Curadh Cooking after a collision with another local service was confirmed.
+- Startup commands: `npm run dev` for normal paired web/API development; `validate.cmd` for the repository validation workflow.
+- GitHub validation proves typecheck, API/unit tests, production build, and Playwright browser vertical slice on the current PR heads. No new local runtime failure is known.
+- The sole current waiting state is owner browser/experience approval. Migration must not begin while the proven implementation remains stranded off the default branch.
 
 ### Verified foundation already implemented
 
